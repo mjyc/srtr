@@ -1,5 +1,9 @@
 const {parser} = require('js2smt2');
-const {astFilter, astToJS, pEval} = require('../src/');
+const {
+  astFilter,
+  astToJS,
+  makeResidual
+} = require('../src/');
 
 test('astFilter', () => {
   const ast = parser.parse(`
@@ -334,7 +338,7 @@ return (function (a, b) {
 
 });
 
-test('pEval', () => {
+test('makeResidual', () => {
   const ast = parser.parse(`
 if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
   return 'branch1';
@@ -349,6 +353,6 @@ if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
     b: {type: 'there', value: 0},
   };
   const astIfStatement = ast.body[0];
-  const subAst = pEval(astIfStatement, parameterMap);
+  const subAst = makeResidual(astIfStatement, parameterMap);
   expect(subAst).toEqual({type: 'Literal', value: 'branch1'});
 });

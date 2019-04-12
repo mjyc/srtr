@@ -54,8 +54,7 @@ function astToJS(ast) {
   }
 }
 
-// pEval -> MakeResidual
-function pEval(transAst, paramMap) {
+function makeResidual(transAst, paramMap) {
   function paramMapToJS(pMap) {
     return Object.keys(pMap).map(function(k) {
       return `var ${k} = ${JSON.stringify(pMap[k])};`
@@ -86,16 +85,20 @@ return ${astToJS(ast.test)};
   return selectSubtree(transAst);
 }
 
-// makeResidual -> correctOne
-function makeResidual(transAst, paramMap, trace, correction) {
-  function paramMapToJS(pMap) {
-    return Object.keys(pMap).map(function(k) {
-      return `var ${k} = ${JSON.stringify(pMap[k])};`
-    }).join('\n');
-  }
-  // combine trace & correction to create parameters to transition-args
-  // create args that will be used in (transition ${}) from combined thing
-  `(= ${correction} (transition ${}))`
+function correctOne(transAst, paramMap, trace, correction) {
+
+  // paramMap should ... ?
+  // var residual = makeResidual(transAst, paramMap);
+
+
+  // function paramMapToJS(pMap) {
+  //   return Object.keys(pMap).map(function(k) {
+  //     return `var ${k} = ${JSON.stringify(pMap[k])};`
+  //   }).join('\n');
+  // }
+  // // combine trace & correction to create parameters to transition-args
+  // // create args that will be used in (transition ${}) from combined thing
+  // `(= ${correction} (transition ${}))`
   return undefined;
 }
 
@@ -110,5 +113,5 @@ function srtr(transAst, paramMap, trace, corrections) {
 module.exports = {
   astFilter: astFilter,
   astToJS: astToJS,
-  pEval: pEval,
+  makeResidual: makeResidual,
 }
