@@ -3,7 +3,7 @@ const {
   astFilter,
   astToJS,
   makeResidual,
-  subsitudeVariables,
+  subsituteVariables,
   extractVariables,
 } = require('../src/');
 
@@ -341,10 +341,25 @@ return (function (a, b) {
 });
 
 test('subsituteVariables', () => {
-  expect(true).toBe(false);
+  const ast = parser.parse(
+      `a == 'hello' && b.type == 'there' && b.value * 1 === 0`);
+  const varMap = {
+    a: 'hello',
+    b: {
+      type: 'there',
+      value: 0,
+    }
+  };
+  const astSubed = subsituteVariables(ast, varMap);
+  expect(astToJS(astSubed))
+    .toBe(`((("hello" == "hello") && ("there" == "there")) && ((0 * 1) === 0))`);
 });
 
-test('findVariables', () => {
+test('extractVariables', () => {
+  const ast = parser.parse(
+      `a == 'hello' && b.type == 'there' && b.value * 1 === 0`);
+  const variables = extractVariables(ast);
+  console.log(JSON.stringify(variables));
   expect(true).toBe(false);
 });
 

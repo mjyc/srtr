@@ -49,39 +49,68 @@ function astToJS(ast) {
     return `"${astToJS(ast.key)}": ${astToJS(ast.value)}`;
   } else if (ast.type === 'ObjectExpression') {
     return `{${ast.properties.map(function (property) {return astToJS(property);}).join(', ')}}`;
+  } else if (ast.type === 'Program') {
+    return ast.body.map(function (b) {return astToJS(b);}).join('; ');
   } else {
     throw new Error(`Invalid input ast=${JSON.stringify(ast)}`);
   }
 }
 
-function subsitudeVariables(ast, variableMap) {
-  // function filter(ast) {
-  //   if (!pred(ast)) {
-  //     return null;
-  //   }
+function subsituteVariables(ast, variableMap) {
+  function subsitute(ast, varMap) {
+    if (ast.type === 'Identifier') {
+      return {
+        type: ast.type,
+        name: typeof varMap[ast.name] === 'undefined'
+          ? ast.name : typeof varMap[ast.name] === 'string'
+          ? JSON.stringify(varMap[ast.name]) : varMap[ast.name],
+      }
+    } else if (ast.type === 'MemberExpression') {
+      const object = subsitute(ast.object, varMap);
+      if (!ast.property.computed) {
+        return subsitute(ast.property, object.name);
+      } else {
+        const property = subsitute(ast.property, varMap);
+        return subsitute(property, object.name);
+      }
+    }
 
-  //   return Object.keys(ast).reduce(function(prev, k) {
-  //     if (Array.isArray(ast[k])) {
-  //       prev[k] = ast[k]
-  //         .map(function(elem) {return filter(elem);})
-  //         .filter(function(elem) {return elem !== null});
-  //     } else if (typeof ast[k] === 'object' && ast[k] !== null) {
-  //       var t = filter(ast[k]);
-  //       if (t !== null) {
-  //         prev[k] = t;
-  //       }
-  //     } else {
-  //       prev[k] = ast[k];
-  //     }
-  //     return prev;
-  //   }, {});
-  // }
+    return Object.keys(ast).reduce(function(prev, k) {
+      if (Array.isArray(ast[k])) {
+        prev[k] = ast[k]
+          .map(function(elem) {return subsitute(elem, varMap);});
+      } else if (typeof ast[k] === 'object' && ast[k] !== null) {
+        prev[k] = subsitute(ast[k], varMap);
+      } else {
+        prev[k] = ast[k];
+      }
+      return prev;
+    }, {});
+  }
 
-  return undefined;
+  return subsitute(ast, variableMap);
 }
 
-function extractVariables() {
-  return [];
+function extractVariables(ast) {
+  function extract(ast, vars) {
+    if (ast.type === 'Identifier') {
+      return vars.slice(0).concat(ast.name);
+    }
+
+    return Object.keys(ast).reduce(function(prev, k) {
+      if (Array.isArray(ast[k])) {
+        prev[k] = ast[k]
+          .map(function(elem) {return extract(elem, vars);});
+      } else if (typeof ast[k] === 'object' && ast[k] !== null) {
+        prev[k] = extract(ast[k], vars);
+      } else {
+        prev[k] = ast[k];
+      }
+      return prev;
+    }, {});
+  }
+
+  return extract(ast, []);
 }
 
 function makeResidual(transAst, paramMap) {
@@ -143,7 +172,7 @@ function srtr(transAst, paramMap, trace, corrections) {
 module.exports = {
   astFilter: astFilter,
   astToJS: astToJS,
-  subsitudeVariables: subsitudeVariables,
+  subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,
   makeResidual: makeResidual,
 }
