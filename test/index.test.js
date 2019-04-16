@@ -2,7 +2,9 @@ const {parser} = require('js2smt2');
 const {
   astFilter,
   astToJS,
-  makeResidual
+  makeResidual,
+  subsitudeVariables,
+  extractVariables,
 } = require('../src/');
 
 test('astFilter', () => {
@@ -338,21 +340,35 @@ return (function (a, b) {
 
 });
 
+test('subsituteVariables', () => {
+  expect(true).toBe(false);
+});
+
+test('findVariables', () => {
+  expect(true).toBe(false);
+});
+
 test('makeResidual', () => {
-  const ast = parser.parse(`
-if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
-  return 'branch1';
-} else if (a == 'jello' && b.type == 'whirl' && b.value + 1 === 2) {
-  return 'branch2';
-} else {
-  return 'branch3';
-}
-`);
-  const parameterMap = {
-    a: 'hello',
-    b: {type: 'there', value: 0},
-  };
-  const astIfStatement = ast.body[0];
-  const subAst = makeResidual(astIfStatement, parameterMap);
-  expect(subAst).toEqual({type: 'Literal', value: 'branch1'});
+//   const ast = parser.parse(`
+// if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
+//   return 'branch1';
+// } else if (a == 'jello' && b.type == 'whirl' && b.value + 1 === 2) {
+//   return 'branch2';
+// } else {
+//   return 'branch3';
+// }
+// `);
+//   const parameterMap = {
+//     thetaA: 1,
+//     thetaB: 1,
+//   };
+//   const trace = {
+//     a: 'hello',
+//     b: {type: 'there', value: 0},
+//   }
+//   const
+//   const astIfStatement = ast.body[0];
+//   const subAst = makeResidual(astIfStatement, parameterMap);
+//   expect(subAst).toEqual({type: 'Literal', value: 'branch1'});
+  expect(true).toBe(false);
 });

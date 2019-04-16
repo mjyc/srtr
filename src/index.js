@@ -54,6 +54,36 @@ function astToJS(ast) {
   }
 }
 
+function subsitudeVariables(ast, variableMap) {
+  // function filter(ast) {
+  //   if (!pred(ast)) {
+  //     return null;
+  //   }
+
+  //   return Object.keys(ast).reduce(function(prev, k) {
+  //     if (Array.isArray(ast[k])) {
+  //       prev[k] = ast[k]
+  //         .map(function(elem) {return filter(elem);})
+  //         .filter(function(elem) {return elem !== null});
+  //     } else if (typeof ast[k] === 'object' && ast[k] !== null) {
+  //       var t = filter(ast[k]);
+  //       if (t !== null) {
+  //         prev[k] = t;
+  //       }
+  //     } else {
+  //       prev[k] = ast[k];
+  //     }
+  //     return prev;
+  //   }, {});
+  // }
+
+  return undefined;
+}
+
+function extractVariables() {
+  return [];
+}
+
 function makeResidual(transAst, paramMap) {
   function paramMapToJS(pMap) {
     return Object.keys(pMap).map(function(k) {
@@ -113,5 +143,7 @@ function srtr(transAst, paramMap, trace, corrections) {
 module.exports = {
   astFilter: astFilter,
   astToJS: astToJS,
+  subsitudeVariables: subsitudeVariables,
+  extractVariables: extractVariables,
   makeResidual: makeResidual,
 }
