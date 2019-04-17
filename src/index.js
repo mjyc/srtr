@@ -1,4 +1,5 @@
 "use strict";
+var utils = require('../src/utils');
 
 function astRemoveNode(ast, pred) {
   function filter(ast) {
@@ -128,15 +129,31 @@ function extractVariables(ast) {
   return vars.filter(function(v, i){ return vars.indexOf(v) >= i; });
 }
 
+function hasIdentifier(tree) {
+  return utils.astReduce(tree, function (acc, leaf) {
+    return acc || leaf.type === 'Identifier';
+  }, function (acc, node) {
+    const updated = Object.keys(node).reduce(function (prev, k) {
+      if (k === 'body') {
+        return prev || node[k].reduce(function(p, b) {return p;} || b, false);
+      } else if (
+        k === 'right' || k === 'left'
+        || k === 'object' || k === 'property'
+        || k === 'expression'
+      ) {
+        return prev || node[k];
+      } else {
+        return prev;
+      }
+    }, false);
+    return acc || updated;
+  }, false);
+}
+
 function makeResidual(transAst, paramMap, trace) {
 
-<<<<<<< HEAD
-  var ast = subsituteVariables(
-    subsituteVariables(transAst, paramMap),
-    trace,
-  );
-  console.log(astToJS(ast));
-=======
+  const subbedAst = subsituteVariables(transAst, paramMap);
+  console.log(JSON.stringify(hasIdentifier(subbedAst), null, 2));
 //   function pEval(ast) {
 //     if (ast.type === 'IfStatement') {
 
@@ -162,7 +179,6 @@ function makeResidual(transAst, paramMap, trace) {
   //   trace,
   // );
   // console.log(ast);
->>>>>>> c5ee426... WIP
 
 //   function paramMapToJS(pMap) {
 //     return Object.keys(pMap).map(function(k) {

@@ -400,5 +400,7 @@ if (state == 'A' && b.value > paramA) {
   // const ua = pEval(ast.body[0]);
   // console.log(JSON.stringify(ua, null, 2));
 
+  makeResidual(transAst, parameterMap, trace)
+
   expect(true).toBe(true);
 });
