@@ -26,23 +26,6 @@ function astFilter(ast, pred) {
   return filter(ast);
 }
 
-function astReduce(ast, nodeFnc, leafFnc) {
-  if (ast.type === 'Identifier' || ast.type === 'Literal') {
-    return leafFnc(ast);
-  } else {
-    var node = Object.keys(ast).map(function(prev, k) {
-      if (Array.isArray(ast[k])) {
-        prev[k] = ast[k].map(function(n) {return astReduce(n);})
-      } else if (typeof ast[k] === 'object' && ast[k] !== null) {
-        prev[k] = astReduce(ast[k]);
-      } else {
-        prev[k] = ast[k]
-      }
-    }, {});
-    return nodeFnc(node);
-  }
-}
-
 function astToJS(ast) {
   if (ast.type === 'Identifier') {
     return ast.name;
@@ -240,7 +223,6 @@ function srtr(transAst, paramMap, trace, corrections) {
 
 module.exports = {
   astFilter: astFilter,
-  astReduce: astReduce,
   astToJS: astToJS,
   subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,

@@ -1,7 +1,6 @@
 const {parser} = require('js2smt2');
 const {
   astFilter,
-  astReduce,
   astToJS,
   makeResidual,
   subsituteVariables,
@@ -294,24 +293,6 @@ function f(a, b) {
         }
     ]
   });
-});
-
-test('astReduce', () => {
-  const ast = parser.parse(`a == 'hello' && b == 'there'`);
-  astReduce(ast, (leaf) => {
-    return ast.type === 'Identifier';
-  }, (node) => {
-    Object.keys(node).reduce(k => {
-      if (Array.isArray(node[k])) {
-        return n.reduce((prev, b) => prev && b, true);
-      } else if (typeof n === 'object' && n !== null) {
-        return Object.keys(n).reduce((prev, nk) => prev && n[nk], true);
-      } else {
-        return prev;
-      }
-    })
-    return ;
-  }, )
 });
 
 test('astToJS', () => {
