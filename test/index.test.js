@@ -378,27 +378,21 @@ test('makeResidual', () => {
   const transAst = parser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'A';
-} else {
+} else if (state == 'A' && b.value < paramB) {
   return 'C';
+} else {
+  return 'B';
 }
 `);
   const parameterMap = {
     paramA: 2,
-    // paramB: 0,
   };
   const trace = {
     state: 'A',
     b: {value: 0},
   }
 
-  console.log('transAst', JSON.stringify(transAst, null, 2));
-  var ast1 = subsituteVariables(transAst, parameterMap);
-  console.log('ast1', JSON.stringify(ast1, null, 2));
-  var ast = subsituteVariables(
-    ast1,
-    trace,
-  );
-  console.log('ast', astToJS(ast));
+  const ast = makeResidual(transAst, parameterMap, trace);
 
   expect(true).toBe(false);
 });

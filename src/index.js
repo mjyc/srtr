@@ -44,7 +44,7 @@ function astToJS(ast) {
   } else if (ast.type === 'BlockStatement') {
     return ast.body.map(function(b) {return `${astToJS(b)};`;}).join(' ');
   } else if (ast.type === 'IfStatement') {
-    return `if (${astToJS(ast.test)}) { ${astToJS(ast.consequent)} } else { ${astToJS(ast.alternate)}; }`;
+    return `if (${astToJS(ast.test)}) { ${astToJS(ast.consequent)} } else { ${astToJS(ast.alternate)} }`;
   } else if (ast.type === 'MemberExpression') {
     return `${astToJS(ast.object)}["${astToJS(ast.property)}"]`;
   } else if (ast.type === 'Property') {
@@ -52,7 +52,7 @@ function astToJS(ast) {
   } else if (ast.type === 'ObjectExpression') {
     return `{${ast.properties.map(function (property) {return astToJS(property);}).join(', ')}}`;
   } else if (ast.type === 'Program') {
-    return ast.body.map(function (b) {return astToJS(b);}).join('; ');
+    return ast.body.map(function (b) {return astToJS(b);}).join(' ');
   } else {
     throw new Error(`Invalid input ast=${JSON.stringify(ast)}`);
   }
@@ -130,11 +130,11 @@ function extractVariables(ast) {
 
 function makeResidual(transAst, paramMap, trace) {
 
-  // var ast = subsituteVariables(
-  //   subsituteVariables(transAst, paramMap),
-  //   trace,
-  // );
-  // console.log(ast);
+  var ast = subsituteVariables(
+    subsituteVariables(transAst, paramMap),
+    trace,
+  );
+  console.log(astToJS(ast));
 
 //   function paramMapToJS(pMap) {
 //     return Object.keys(pMap).map(function(k) {
@@ -142,26 +142,27 @@ function makeResidual(transAst, paramMap, trace) {
 //     }).join('\n');
 //   }
 
-//   function selectSubtree(ast) {
-//     if (ast.type === 'ReturnStatement') {
-//       return ast.argument;
-//     } else if (ast.type === 'BlockStatement') {
-//       if (ast.body.length > 1) {
-//         throw new Error(`BlockStatement is not supported for ast.body.length=${ast.body.length} > 1`);
-//       }
-//       return ast.body.map(function(b) {return selectSubtree(b);})[0];
-//     } else if (ast.type === 'IfStatement') {
-//       var testVal = Function(`
-// "use strict";
-// return function() {
-// ${paramMapToJS(paramMap)}
-// return ${astToJS(ast.test)};
-// }()`)();
-//       return testVal ? selectSubtree(ast.consequent) : selectSubtree(ast.alternate)
-//     } else {
-//       throw new Error(`Invalid input ast=${JSON.stringify(ast)}`);
-//     }
-//   }
+  function selectSubtree(ast) {
+    if (ast.type === 'ReturnStatement') {
+      return ast.argument;
+    } else if (ast.type === 'BlockStatement') {
+      if (ast.body.length > 1) {
+        throw new Error(`BlockStatement is not supported for ast.body.length=${ast.body.length} > 1`);
+      }
+      return ast.body.map(function(b) {return selectSubtree(b);})[0];
+    } else if (ast.type === 'IfStatement') {
+      var testVal = Function(`
+"use strict";
+return function() {
+return ${astToJS(ast.test)};
+}()`)();
+      return testVal
+        ? selectSubtree(ast.consequent)
+        : selectSubtree(ast.alternate);
+    } else {
+      throw new Error(`Invalid input ast=${JSON.stringify(ast)}`);
+    }
+  }
 
 //   return selectSubtree(transAst);
   return undefined;
