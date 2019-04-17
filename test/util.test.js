@@ -4,9 +4,10 @@ const {
 } = require('../src/utils');
 
 test('astReduce', () => {
-  const hasIdentifier = ast => astReduce(ast, (leaf) => {
-    return leaf.type === 'Identifier';
-  }, (node) => {
+  const hasIdentifier = tree => astReduce(tree, (acc, leaf) => {
+    // return leaf.type === 'Identifier';
+    return acc || leaf.type === 'Identifier';
+  }, (acc, node) => {
     const updated = Object.keys(node).reduce((prev, k) => {
       if (k === 'body') {
         return prev || node[k].reduce((p, b) => p || b, false);
@@ -20,8 +21,8 @@ test('astReduce', () => {
         return prev;
       }
     }, false);
-    return updated;
-  });
+    return acc || updated;
+  }, false);
 
   expect(hasIdentifier(parser.parse(`a == 'hello' && b == 'there'`)))
     .toBe(true);
