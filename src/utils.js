@@ -1,3 +1,5 @@
+"use strict";
+
 function astReduce(ast, leafFnc, nodeFnc) {
   if (ast.type === 'Identifier' || ast.type === 'Literal') {
     return leafFnc(ast);

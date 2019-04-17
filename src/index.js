@@ -1,6 +1,6 @@
 "use strict";
 
-function astFilter(ast, pred) {
+function astRemoveNode(ast, pred) {
   function filter(ast) {
     if (!pred(ast)) {
       return null;
@@ -222,7 +222,7 @@ function srtr(transAst, paramMap, trace, corrections) {
 }
 
 module.exports = {
-  astFilter: astFilter,
+  astRemoveNode: astRemoveNode,
   astToJS: astToJS,
   subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,
