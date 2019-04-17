@@ -12,7 +12,6 @@ function astReduce(ast, leafFnc, nodeFnc) {
       }
       return prev;
     }, {});
-    // console.log('node', node);
     return nodeFnc(node);
   }
 }
