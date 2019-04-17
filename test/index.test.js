@@ -1,6 +1,7 @@
 const {parser} = require('js2smt2');
 const {
   astFilter,
+  astReduce,
   astToJS,
   makeResidual,
   subsituteVariables,
@@ -295,6 +296,24 @@ function f(a, b) {
   });
 });
 
+test('astReduce', () => {
+  const ast = parser.parse(`a == 'hello' && b == 'there'`);
+  astReduce(ast, (leaf) => {
+    return ast.type === 'Identifier';
+  }, (node) => {
+    Object.keys(node).reduce(k => {
+      if (Array.isArray(node[k])) {
+        return n.reduce((prev, b) => prev && b, true);
+      } else if (typeof n === 'object' && n !== null) {
+        return Object.keys(n).reduce((prev, nk) => prev && n[nk], true);
+      } else {
+        return prev;
+      }
+    })
+    return ;
+  }, )
+});
+
 test('astToJS', () => {
   const ast = parser.parse(`
 if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
@@ -392,7 +411,16 @@ if (state == 'A' && b.value > paramA) {
     b: {value: 0},
   }
 
+<<<<<<< HEAD
   const ast = makeResidual(transAst, parameterMap, trace);
+=======
+  let ast = subsituteVariables(transAst, trace);
+  // ast = subsituteVariables(ast, parameterMap);
+  console.log(JSON.stringify(ast, null, 2));
+
+  const ua = pEval(ast.body[0]);
+  console.log(JSON.stringify(ua, null, 2));
+>>>>>>> c5ee426... WIP
 
   expect(true).toBe(false);
 });
