@@ -5,7 +5,6 @@ const {
 
 test('astReduce', () => {
   const hasIdentifier = tree => astReduce(tree, (acc, leaf) => {
-    // return leaf.type === 'Identifier';
     return acc || leaf.type === 'Identifier';
   }, (acc, node) => {
     const updated = Object.keys(node).reduce((prev, k) => {
