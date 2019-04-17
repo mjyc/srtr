@@ -48,7 +48,7 @@ function selectSubtree(ast) {
     return ast.body.map(function(b) {return `${interp(b)}`;}).join(' ');
   } else if (ast.type === 'IfStatement') {
     const testVal = Function(`
-'use strict'
+"use strict";
 return function() {
 ${paramMapToJS(parameterMap)}
 ${astToJS(ast.test)}

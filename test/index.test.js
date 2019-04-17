@@ -325,14 +325,14 @@ if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
 `);
 
   expect(Function(`
-'use strict'
+"use strict";
 return (function (a, b) {
   ${astToJS(ast.body[0])}
 })('hello', {type: 'there' , value: 0});
 `)()).toEqual({state: 'branch1', outputs: {action1: 'a1', action2: 100}});
 
   expect(Function(`
-'use strict'
+"use strict";
 return (function (a, b) {
   ${astToJS(ast.body[0])}
 })('jello', {type: 'whirl' , value: 1});
@@ -355,35 +355,50 @@ test('subsituteVariables', () => {
     .toBe(`((("hello" == "hello") && ("there" == "there")) && ((0 * 1) === 0))`);
 });
 
+test('subsituteVariables - handling MemberExpression', () => {
+  const ast = parser.parse(`b["type"]`);
+  const varMap = {
+    b: {
+      type: 'there',
+    }
+  };
+  const astSubed = subsituteVariables(ast, varMap);
+  expect(astToJS(astSubed))
+    .toBe(`"there"`);
+});
+
 test('extractVariables', () => {
   const ast = parser.parse(
       `a == 'hello' && b.type == 'there' && b.value * 1 === 0`);
   const variables = extractVariables(ast);
-  console.log(JSON.stringify(variables));
-  expect(true).toBe(false);
+  expect(variables.sort()).toEqual(["a", "b"]);
 });
 
 test('makeResidual', () => {
-//   const ast = parser.parse(`
-// if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
-//   return 'branch1';
-// } else if (a == 'jello' && b.type == 'whirl' && b.value + 1 === 2) {
-//   return 'branch2';
-// } else {
-//   return 'branch3';
-// }
-// `);
-//   const parameterMap = {
-//     thetaA: 1,
-//     thetaB: 1,
-//   };
-//   const trace = {
-//     a: 'hello',
-//     b: {type: 'there', value: 0},
-//   }
-//   const
-//   const astIfStatement = ast.body[0];
-//   const subAst = makeResidual(astIfStatement, parameterMap);
-//   expect(subAst).toEqual({type: 'Literal', value: 'branch1'});
+  const transAst = parser.parse(`
+if (state == 'A' && b.value > paramA) {
+  return 'A';
+} else {
+  return 'C';
+}
+`);
+  const parameterMap = {
+    paramA: 2,
+    // paramB: 0,
+  };
+  const trace = {
+    state: 'A',
+    b: {value: 0},
+  }
+
+  console.log('transAst', JSON.stringify(transAst, null, 2));
+  var ast1 = subsituteVariables(transAst, parameterMap);
+  console.log('ast1', JSON.stringify(ast1, null, 2));
+  var ast = subsituteVariables(
+    ast1,
+    trace,
+  );
+  console.log('ast', astToJS(ast));
+
   expect(true).toBe(false);
 });

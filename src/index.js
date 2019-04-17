@@ -1,3 +1,5 @@
+"use strict";
+
 function astFilter(ast, pred) {
   function filter(ast) {
     if (!pred(ast)) {
@@ -59,20 +61,25 @@ function astToJS(ast) {
 function subsituteVariables(ast, variableMap) {
   function subsitute(ast, varMap) {
     if (ast.type === 'Identifier') {
-      return {
-        type: ast.type,
-        name: typeof varMap[ast.name] === 'undefined'
-          ? ast.name : typeof varMap[ast.name] === 'string'
-          ? JSON.stringify(varMap[ast.name]) : varMap[ast.name],
-      }
+      var value = varMap[ast.name];
+      return typeof value === 'undefined' ? ast
+        : {
+          type: 'Literal',
+          value: value,
+        };
     } else if (ast.type === 'MemberExpression') {
       const object = subsitute(ast.object, varMap);
-      if (!ast.property.computed) {
-        return subsitute(ast.property, object.name);
-      } else {
-        const property = subsitute(ast.property, varMap);
-        return subsitute(property, object.name);
-      }
+      const property = !ast.property.computed
+        ? ast.property : subsitute(ast.property, varMap);
+      return (typeof object.value === 'object' && object.value !== null)
+        ? subsitute(
+          property.type === 'Literal'
+            ? {
+              type: 'Identifier',
+              name: property.value
+            } : property,
+          object.value
+        ) : ast;
     }
 
     return Object.keys(ast).reduce(function(prev, k) {
@@ -95,53 +102,69 @@ function extractVariables(ast) {
   function extract(ast, vars) {
     if (ast.type === 'Identifier') {
       return vars.slice(0).concat(ast.name);
+    } else if (ast.type === 'MemberExpression') {
+      const objVars = extractVariables(ast.object, vars);
+      const propVars = !ast.property.computed
+        ? [] : extractVariables(ast.property, vars);
+      return objVars.concat(propVars);
     }
 
     return Object.keys(ast).reduce(function(prev, k) {
       if (Array.isArray(ast[k])) {
-        prev[k] = ast[k]
-          .map(function(elem) {return extract(elem, vars);});
+        return prev.concat(
+          ast[k]
+            .map(function(elem) {return extract(elem, vars);})
+            .reduce(function (prev, arr) { return prev.concat(arr); }, vars)
+        );
       } else if (typeof ast[k] === 'object' && ast[k] !== null) {
-        prev[k] = extract(ast[k], vars);
+        return prev.concat(extract(ast[k], vars));
       } else {
-        prev[k] = ast[k];
+        return prev;
       }
-      return prev;
-    }, {});
+    }, []);
   }
 
-  return extract(ast, []);
+  var vars = extract(ast, []);
+  return vars.filter(function(v, i){ return vars.indexOf(v) >= i; });
 }
 
-function makeResidual(transAst, paramMap) {
-  function paramMapToJS(pMap) {
-    return Object.keys(pMap).map(function(k) {
-      return `var ${k} = ${JSON.stringify(pMap[k])};`
-    }).join('\n');
-  }
+function makeResidual(transAst, paramMap, trace) {
 
-  function selectSubtree(ast) {
-    if (ast.type === 'ReturnStatement') {
-      return ast.argument;
-    } else if (ast.type === 'BlockStatement') {
-      if (ast.body.length > 1) {
-        throw new Error(`BlockStatement is not supported for ast.body.length=${ast.body.length} > 1`);
-      }
-      return ast.body.map(function(b) {return selectSubtree(b);})[0];
-    } else if (ast.type === 'IfStatement') {
-      var testVal = Function(`
-'use strict'
-return function() {
-${paramMapToJS(paramMap)}
-return ${astToJS(ast.test)};
-}()`)();
-      return testVal ? selectSubtree(ast.consequent) : selectSubtree(ast.alternate)
-    } else {
-      throw new Error(`Invalid input ast=${JSON.stringify(ast)}`);
-    }
-  }
+  // var ast = subsituteVariables(
+  //   subsituteVariables(transAst, paramMap),
+  //   trace,
+  // );
+  // console.log(ast);
 
-  return selectSubtree(transAst);
+//   function paramMapToJS(pMap) {
+//     return Object.keys(pMap).map(function(k) {
+//       return `var ${k} = ${JSON.stringify(pMap[k])};`
+//     }).join('\n');
+//   }
+
+//   function selectSubtree(ast) {
+//     if (ast.type === 'ReturnStatement') {
+//       return ast.argument;
+//     } else if (ast.type === 'BlockStatement') {
+//       if (ast.body.length > 1) {
+//         throw new Error(`BlockStatement is not supported for ast.body.length=${ast.body.length} > 1`);
+//       }
+//       return ast.body.map(function(b) {return selectSubtree(b);})[0];
+//     } else if (ast.type === 'IfStatement') {
+//       var testVal = Function(`
+// "use strict";
+// return function() {
+// ${paramMapToJS(paramMap)}
+// return ${astToJS(ast.test)};
+// }()`)();
+//       return testVal ? selectSubtree(ast.consequent) : selectSubtree(ast.alternate)
+//     } else {
+//       throw new Error(`Invalid input ast=${JSON.stringify(ast)}`);
+//     }
+//   }
+
+//   return selectSubtree(transAst);
+  return undefined;
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
