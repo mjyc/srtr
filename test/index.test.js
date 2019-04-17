@@ -402,5 +402,5 @@ if (state == 'A' && b.value > paramA) {
 
   makeResidual(transAst, parameterMap, trace)
 
-  expect(true).toBe(true);
+  expect(false).toBe(true);
 });
