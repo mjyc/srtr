@@ -153,20 +153,11 @@ function hasIdentifier(tree) {
 }
 
 function makeResidual(transAst, paramMap, trace) {
-
   const subbedAst = subsituteVariables(transAst, trace);
-  // console.log(JSON.stringify(subbedAst, null, 2));
-
-  const a = utils.astMap(subbedAst, function(leaf) {
+  const subAst = utils.astMap(subbedAst, function(leaf) {
     return leaf;
   }, function (node) {
     if (node.type === 'IfStatement') {
-      // console.log('type', hasIdentifier(node.type), JSON.stringify(node.type, null, 2));
-      // console.log('consequent', hasIdentifier(node.consequent), JSON.stringify(node.consequent, null, 2));
-      // console.log('alternate', hasIdentifier(node.alternate), JSON.stringify(node.alternate, null, 2));
-      // console.log('type', hasIdentifier(node.type));
-      // console.log('consequent', hasIdentifier(node.consequent));
-      // console.log('alternate', hasIdentifier(node.alternate));
       if (hasIdentifier(node.test)) {
         return node;
       } else {
@@ -188,66 +179,12 @@ function makeResidual(transAst, paramMap, trace) {
     }
   });
 
-  console.log(JSON.stringify(a, null, 2));
-  console.log(JSON.stringify(astToJS(a), null, 2));
+  // console.log(JSON.stringify(subAst, null, 2));
+  // console.log(JSON.stringify(astToJS(subAst), null, 2));
 
-  // if the branch is IfStatement, remove the branches that does not have...
+  var subbedSubAst = subsituteVariables(subAst, paramMap);
+  console.log(JSON.stringify(astToJS(subbedSubAst), null, 2));
 
-//   function pEval(ast) {
-//     if (ast.type === 'IfStatement') {
-
-//       try {
-//         Function(`
-// "use strict";
-// return function() {
-// ${paramMapToJS(paramMap)}
-// return ${astToJS(ast.test)};
-// }()`)();
-//       } catch (e) {
-//         ast.consequent
-//       }
-
-//     }
-//   }
-
-  // subsituteVariables(transAst, )
-
-
-  // var ast = subsituteVariables(
-  //   subsituteVariables(transAst, paramMap),
-  //   trace,
-  // );
-  // console.log(ast);
-
-//   function paramMapToJS(pMap) {
-//     return Object.keys(pMap).map(function(k) {
-//       return `var ${k} = ${JSON.stringify(pMap[k])};`
-//     }).join('\n');
-//   }
-
-  function selectSubtree(ast) {
-    if (ast.type === 'ReturnStatement') {
-      return ast.argument;
-    } else if (ast.type === 'BlockStatement') {
-      if (ast.body.length > 1) {
-        throw new Error(`BlockStatement is not supported for ast.body.length=${ast.body.length} > 1`);
-      }
-      return ast.body.map(function(b) {return selectSubtree(b);})[0];
-    } else if (ast.type === 'IfStatement') {
-      var testVal = Function(`
-"use strict";
-return function() {
-return ${astToJS(ast.test)};
-}()`)();
-      return testVal
-        ? selectSubtree(ast.consequent)
-        : selectSubtree(ast.alternate);
-    } else {
-      throw new Error(`Invalid input ast=${JSON.stringify(ast)}`);
-    }
-  }
-
-//   return selectSubtree(transAst);
   return undefined;
 }
 
