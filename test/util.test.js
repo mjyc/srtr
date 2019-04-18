@@ -1,7 +1,41 @@
 const {parser} = require('js2smt2');
 const {
+  astMap,
   astReduce,
 } = require('../src/utils');
+
+test('astMap', () => {
+  const subsitute = tree => astMap(tree, (leaf) => {
+    return leaf.type === 'Identifier' ? {
+      type: 'Literal',
+      value: leaf.name,
+    } : leaf;
+  }, (node) => {
+    return node;
+  });
+
+  expect(subsitute(parser.parse(`a === 'hello'`)))
+    .toEqual({
+       "type": "Program",
+       "body": [
+          {
+             "type": "ExpressionStatement",
+             "expression": {
+                "type": "BinaryExpression",
+                "operator": "===",
+                "left": {
+                   "type": "Literal",
+                   "value": "a"
+                },
+                "right": {
+                   "type": "Literal",
+                   "value": "hello"
+                }
+             }
+          }
+       ]
+    });
+});
 
 test('astReduce', () => {
   const hasIdentifier = tree => astReduce(tree, (acc, leaf) => {

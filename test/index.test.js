@@ -376,7 +376,7 @@ test('extractVariables', () => {
 
 test('makeResidual', () => {
   const transAst = parser.parse(`
-if (state == 'A' && b.value > paramA) {
+if (state == 'A' && b.value > 2) {
   return 'A';
 } else if (state == 'A' && b.value < paramB) {
   return 'C';

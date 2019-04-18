@@ -140,6 +140,8 @@ function hasIdentifier(tree) {
         k === 'right' || k === 'left'
         || k === 'object' || k === 'property'
         || k === 'expression'
+        || k === 'argument'
+        || k === 'test' || k === 'consequent' || k === 'alternate'
       ) {
         return prev || node[k];
       } else {
@@ -152,8 +154,45 @@ function hasIdentifier(tree) {
 
 function makeResidual(transAst, paramMap, trace) {
 
-  const subbedAst = subsituteVariables(transAst, paramMap);
-  console.log(JSON.stringify(hasIdentifier(subbedAst), null, 2));
+  const subbedAst = subsituteVariables(transAst, trace);
+  // console.log(JSON.stringify(subbedAst, null, 2));
+
+  const a = utils.astMap(subbedAst, function(leaf) {
+    return leaf;
+  }, function (node) {
+    if (node.type === 'IfStatement') {
+      // console.log('type', hasIdentifier(node.type), JSON.stringify(node.type, null, 2));
+      // console.log('consequent', hasIdentifier(node.consequent), JSON.stringify(node.consequent, null, 2));
+      // console.log('alternate', hasIdentifier(node.alternate), JSON.stringify(node.alternate, null, 2));
+      // console.log('type', hasIdentifier(node.type));
+      // console.log('consequent', hasIdentifier(node.consequent));
+      // console.log('alternate', hasIdentifier(node.alternate));
+      if (hasIdentifier(node.test)) {
+        return node;
+      } else {
+        return node.alternate;
+      }
+    } else {
+      return Object.keys(node).reduce(function(prev, k) {
+        if (Array.isArray(node[k])) {
+          prev[k] = node[k].filter(n => n !== null)
+        } else if (typeof node[k] === 'object' && node[k] !== null) {
+          prev[k] = node[k];
+        } else {
+          if (node[k] !== null) {
+            prev[k] = node[k];
+          }
+        }
+        return prev;
+      }, {});
+    }
+  });
+
+  console.log(JSON.stringify(a, null, 2));
+  console.log(JSON.stringify(astToJS(a), null, 2));
+
+  // if the branch is IfStatement, remove the branches that does not have...
+
 //   function pEval(ast) {
 //     if (ast.type === 'IfStatement') {
 
