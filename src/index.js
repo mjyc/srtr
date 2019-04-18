@@ -1,4 +1,5 @@
 "use strict";
+var js2smt2 = require('js2smt2');
 var utils = require('../src/utils');
 
 function astRemoveNode(ast, pred) {
@@ -69,8 +70,8 @@ function subsituteVariables(ast, variableMap) {
           value: value,
         };
     } else if (ast.type === 'MemberExpression') {
-      const object = subsitute(ast.object, varMap);
-      const property = !ast.property.computed
+      var object = subsitute(ast.object, varMap);
+      var property = !ast.property.computed
         ? ast.property : subsitute(ast.property, varMap);
       return (typeof object.value === 'object' && object.value !== null)
         ? subsitute(
@@ -104,8 +105,8 @@ function extractVariables(ast) {
     if (ast.type === 'Identifier') {
       return vars.slice(0).concat(ast.name);
     } else if (ast.type === 'MemberExpression') {
-      const objVars = extractVariables(ast.object, vars);
-      const propVars = !ast.property.computed
+      var objVars = extractVariables(ast.object, vars);
+      var propVars = !ast.property.computed
         ? [] : extractVariables(ast.property, vars);
       return objVars.concat(propVars);
     }
@@ -133,7 +134,7 @@ function hasIdentifier(tree) {
   return utils.astReduce(tree, function (acc, leaf) {
     return acc || leaf.type === 'Identifier';
   }, function (acc, node) {
-    const updated = Object.keys(node).reduce(function (prev, k) {
+    var updated = Object.keys(node).reduce(function (prev, k) {
       if (k === 'body') {
         return prev || node[k].reduce(function(p, b) {return p;} || b, false);
       } else if (
@@ -153,8 +154,8 @@ function hasIdentifier(tree) {
 }
 
 function makeResidual(transAst, paramMap, trace) {
-  const subbedAst = subsituteVariables(transAst, trace);
-  const subAst = utils.astMap(subbedAst, function(leaf) {
+  var subbedAst = subsituteVariables(transAst, trace);
+  var subAst = utils.astMap(subbedAst, function(leaf) {
     return leaf;
   }, function (node) {
     if (node.type === 'IfStatement') {
@@ -166,7 +167,7 @@ function makeResidual(transAst, paramMap, trace) {
     } else {
       return Object.keys(node).reduce(function(prev, k) {
         if (Array.isArray(node[k])) {
-          prev[k] = node[k].filter(n => n !== null)
+          prev[k] = node[k].filter(function (n) {return n !== null;})
         } else if (typeof node[k] === 'object' && node[k] !== null) {
           prev[k] = node[k];
         } else {
@@ -182,30 +183,23 @@ function makeResidual(transAst, paramMap, trace) {
   // console.log(JSON.stringify(subAst, null, 2));
   // console.log(JSON.stringify(astToJS(subAst), null, 2));
 
+  // TODO: don't the below
   var subbedSubAst = subsituteVariables(subAst, paramMap);
   console.log(JSON.stringify(astToJS(subbedSubAst), null, 2));
+  console.log(JSON.stringify(js2smt2.interpret(subbedSubAst), null, 2));
 
-  return undefined;
+  return subbedSubAst;
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
-
-  // paramMap should ... ?
-  // var residual = makeResidual(transAst, paramMap);
-
-
-  // function paramMapToJS(pMap) {
-  //   return Object.keys(pMap).map(function(k) {
-  //     return `var ${k} = ${JSON.stringify(pMap[k])};`
-  //   }).join('\n');
-  // }
-  // // combine trace & correction to create parameters to transition-args
-  // // create args that will be used in (transition ${}) from combined thing
-  // `(= ${correction} (transition ${}))`
+  const residualAst = makeResidual(transAst, paramMap, trace);
+  // TODO: replace params with params + delta
+  // set it equal to correction
   return undefined;
 }
 
 function correctAll(transAst, paramMap, trace, corrections) {
+  // iterate and do XOR
   return undefined;
 }
 
