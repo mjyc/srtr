@@ -159,7 +159,7 @@ function pEval(ast, variableMap) {
   });
 }
 
-function makeResidual(transAst, paramMap, trace) {
+function makeResidual(transAst, trace) {
   var evaledAst = pEval(transAst, trace);
   var subAst = utils.astMap(evaledAst, function(leaf) {
     return leaf;
@@ -223,8 +223,9 @@ function extractVariables(ast) {
 
 function correctOne(transAst, paramMap, trace, correction) {
   var residualAst = makeResidual(transAst, paramMap, trace);
-  // var params = extractVariables(residualAst);
-  return (`(= ${correction} ${js2smt2.interpret(residualAst)})`);
+  const c = typeof correction === 'string'
+    ? JSON.stringify(correction) : correction;
+  return (`(= ${c} ${js2smt2.interpret(residualAst)})`);
 }
 
 function correctAll(transAst, paramMap, traces, corrections) {

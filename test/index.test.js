@@ -89,15 +89,12 @@ if (state == 'A' && b.value < 1) {
   return 'C';
 }
 `);
-  const parameterMap = {
-    paramA: 2,
-  };
   const trace = {
     state: 'A',
     b: {value: 0},
   }
 
-  const residualAst = makeResidual(transAst, parameterMap, trace);
+  const residualAst = makeResidual(transAst, trace);
 
   expect(residualAst).toEqual({
     "type": "Program",
@@ -174,16 +171,12 @@ if (state == 'A' && b.value < paramA) {
   return 'C';
 }
 `);
-  const parameterMap = {
-    paramA: 2,
-    paramB: 4,
-  };
   const trace = {
     state: 'A',
     b: {value: 0},
   }
 
-  const residualAst = makeResidual(transAst, parameterMap, trace);
+  const residualAst = makeResidual(transAst, trace);
 
   expect(residualAst).toEqual({
     "type": "Program",
@@ -259,7 +252,7 @@ if (state == 'A' && b.value < 1) {
 
   const correctedAst = correctOne(transAst, parameterMap, trace, correction);
 
-  // console.log(JSON.stringify(correctedAst, null, 2));
+  console.log(correctedAst);
 
   expect(false).toBe(true);
 });
