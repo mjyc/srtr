@@ -185,10 +185,12 @@ function makeResidual(transAst, paramMap, trace) {
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
-  const residualAst = makeResidual(transAst, paramMap, trace);
-  // console.log(JSON.stringify(astToJS(subbedSubAst), null, 2));
-  // console.log(JSON.stringify(js2smt2.interpret(subbedSubAst), null, 2));
-  // console.log(JSON.stringify(subbedSubAst, null, 2));
+  var residualAst = makeResidual(transAst, paramMap, trace);
+
+  var params = extractVariables(residualAst);
+
+  console.log('params', params);
+
   return undefined;
 }
 

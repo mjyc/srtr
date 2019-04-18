@@ -455,3 +455,29 @@ if (state == 'A' && b.value > 2) {
         ]
       });
 });
+
+test('correctOne', () => {
+  const transAst = parser.parse(`
+if (state == 'A' && b.value > 2) {
+  return 'A';
+} else if (state == 'A' && b.value < paramB) {
+  return 'C';
+} else {
+  return 'B';
+}
+`);
+  const parameterMap = {
+    paramA: 2,
+  };
+  const trace = {
+    state: 'A',
+    b: {value: 0},
+  }
+  const correction = {};
+
+  const correctedAst = correctOne(transAst, parameterMap, trace, correction);
+
+  console.log(JSON.stringify(correctedAst, null, 2));
+
+  expect(false).toBe(true);
+});
