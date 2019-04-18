@@ -356,7 +356,7 @@ test('subsituteVariables', () => {
     .toBe(`((("hello" == "hello") && ("there" == "there")) && ((0 * 1) === 0))`);
 });
 
-test('subsituteVariables - handling MemberExpression', () => {
+test('subsituteVariables - MemberExpression', () => {
   const ast = parser.parse(`b["type"]`);
   const varMap = {
     b: {
@@ -387,6 +387,89 @@ if (state == 'A' && b.value < 1) {
 `);
   const parameterMap = {
     paramA: 2,
+  };
+  const trace = {
+    state: 'A',
+    b: {value: 0},
+  }
+
+  const residualAst = makeResidual(transAst, parameterMap, trace);
+
+  expect(residualAst).toEqual({
+    "type": "Program",
+    "body": [
+      {
+        "type": "IfStatement",
+        "test": {
+          "type": "LogicalExpression",
+          "operator": "&&",
+          "left": {
+            "type": "BinaryExpression",
+            "operator": "==",
+            "left": {
+              "type": "Literal",
+              "value": "A"
+            },
+            "right": {
+              "type": "Literal",
+              "value": "A"
+            }
+          },
+          "right": {
+            "type": "BinaryExpression",
+            "operator": "<",
+            "left": {
+              "type": "Literal",
+              "value": 0
+            },
+            "right": {
+              "type": "Identifier",
+              "name": "paramA"
+            }
+          }
+        },
+        "consequent": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Literal",
+                "value": "B"
+              }
+            }
+          ]
+        },
+        "alternate": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Literal",
+                "value": "C"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  });
+});
+
+test('makeResidual - two states', () => {
+  const transAst = parser.parse(`
+if (state == 'A' && b.value < paramA) {
+  return 'A';
+} else if (state == 'B' && b.value < paramB) {
+  return 'B';
+} else {
+  return 'C';
+}
+`);
+  const parameterMap = {
+    paramA: 2,
+    paramB: 4,
   };
   const trace = {
     state: 'A',
