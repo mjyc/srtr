@@ -392,15 +392,66 @@ if (state == 'A' && b.value > 2) {
     b: {value: 0},
   }
 
-  const ast = makeResidual(transAst, parameterMap, trace);
-  // let ast = subsituteVariables(transAst, trace);
-  // // ast = subsituteVariables(ast, parameterMap);
-  // console.log(JSON.stringify(ast, null, 2));
+  const residualAst = makeResidual(transAst, parameterMap, trace);
 
-  // const ua = pEval(ast.body[0]);
-  // console.log(JSON.stringify(ua, null, 2));
-
-  makeResidual(transAst, parameterMap, trace)
-
-  expect(false).toBe(true);
+  expect(residualAst).toEqual({
+        "type": "Program",
+        "body": [
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "LogicalExpression",
+              "operator": "&&",
+              "left": {
+                "type": "BinaryExpression",
+                "operator": "==",
+                "left": {
+                  "type": "Literal",
+                  "value": "A"
+                },
+                "right": {
+                  "type": "Literal",
+                  "value": "A"
+                }
+              },
+              "right": {
+                "type": "BinaryExpression",
+                "operator": "<",
+                "left": {
+                  "type": "Literal",
+                  "value": 0
+                },
+                "right": {
+                  "type": "Identifier",
+                  "name": "paramB"
+                }
+              }
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "Literal",
+                    "value": "C"
+                  }
+                }
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "Literal",
+                    "value": "B"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      });
 });

@@ -180,21 +180,15 @@ function makeResidual(transAst, paramMap, trace) {
     }
   });
 
-  // console.log(JSON.stringify(subAst, null, 2));
-  // console.log(JSON.stringify(astToJS(subAst), null, 2));
-
-  // TODO: don't the below
   var subbedSubAst = subsituteVariables(subAst, paramMap);
-  console.log(JSON.stringify(astToJS(subbedSubAst), null, 2));
-  console.log(JSON.stringify(js2smt2.interpret(subbedSubAst), null, 2));
-
   return subbedSubAst;
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
   const residualAst = makeResidual(transAst, paramMap, trace);
-  // TODO: replace params with params + delta
-  // set it equal to correction
+  // console.log(JSON.stringify(astToJS(subbedSubAst), null, 2));
+  // console.log(JSON.stringify(js2smt2.interpret(subbedSubAst), null, 2));
+  // console.log(JSON.stringify(subbedSubAst, null, 2));
   return undefined;
 }
 
