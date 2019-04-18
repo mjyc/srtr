@@ -401,21 +401,24 @@ if (state == 'A' && b.value < 1) {
       {
         "type": "IfStatement",
         "test": {
-          "type": "LogicalExpression",
-          "operator": "&&",
-          "left": {
-            "type": "BinaryExpression",
-            "operator": "==",
-            "left": {
-              "type": "Literal",
-              "value": "A"
-            },
-            "right": {
-              "type": "Literal",
-              "value": "A"
+          "type": "Literal",
+          "value": true
+        },
+        "consequent": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Literal",
+                "value": "A"
+              }
             }
-          },
-          "right": {
+          ]
+        },
+        "alternate": {
+          "type": "IfStatement",
+          "test": {
             "type": "BinaryExpression",
             "operator": "<",
             "left": {
@@ -426,31 +429,31 @@ if (state == 'A' && b.value < 1) {
               "type": "Identifier",
               "name": "paramA"
             }
+          },
+          "consequent": {
+            "type": "BlockStatement",
+            "body": [
+              {
+                "type": "ReturnStatement",
+                "argument": {
+                  "type": "Literal",
+                  "value": "B"
+                }
+              }
+            ]
+          },
+          "alternate": {
+            "type": "BlockStatement",
+            "body": [
+              {
+                "type": "ReturnStatement",
+                "argument": {
+                  "type": "Literal",
+                  "value": "C"
+                }
+              }
+            ]
           }
-        },
-        "consequent": {
-          "type": "BlockStatement",
-          "body": [
-            {
-              "type": "ReturnStatement",
-              "argument": {
-                "type": "Literal",
-                "value": "B"
-              }
-            }
-          ]
-        },
-        "alternate": {
-          "type": "BlockStatement",
-          "body": [
-            {
-              "type": "ReturnStatement",
-              "argument": {
-                "type": "Literal",
-                "value": "C"
-              }
-            }
-          ]
         }
       }
     ]
@@ -478,39 +481,21 @@ if (state == 'A' && b.value < paramA) {
 
   const residualAst = makeResidual(transAst, parameterMap, trace);
 
-  console.log(astToJS(residualAst));
-
   expect(residualAst).toEqual({
     "type": "Program",
     "body": [
       {
         "type": "IfStatement",
         "test": {
-          "type": "LogicalExpression",
-          "operator": "&&",
+          "type": "BinaryExpression",
+          "operator": "<",
           "left": {
-            "type": "BinaryExpression",
-            "operator": "==",
-            "left": {
-              "type": "Literal",
-              "value": "A"
-            },
-            "right": {
-              "type": "Literal",
-              "value": "A"
-            }
+            "type": "Literal",
+            "value": 0
           },
           "right": {
-            "type": "BinaryExpression",
-            "operator": "<",
-            "left": {
-              "type": "Literal",
-              "value": 0
-            },
-            "right": {
-              "type": "Identifier",
-              "name": "paramA"
-            }
+            "type": "Identifier",
+            "name": "paramA"
           }
         },
         "consequent": {
@@ -520,7 +505,7 @@ if (state == 'A' && b.value < paramA) {
               "type": "ReturnStatement",
               "argument": {
                 "type": "Literal",
-                "value": "B"
+                "value": "A"
               }
             }
           ]

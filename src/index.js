@@ -153,13 +153,78 @@ function hasIdentifier(tree) {
   }, false);
 }
 
+function pEval(ast, variableMap) {
+  const subbedAst = subsituteVariables(ast, variableMap);
+  return utils.astMap(subbedAst, function (leaf) {
+    return leaf;
+  }, function (node) {
+    if (
+      node.type === 'UnaryExpression' && node.argument.type === 'Literal'
+      || (
+        (node.type === 'BinaryExpression' || node.type === 'LogicalExpression')
+        && node.left.type === 'Literal' && node.right.type === 'Literal'
+      )
+    ) {
+      return {
+        type: 'Literal',
+        value: Function(`return ${astToJS(node)}`)(),
+      };
+    } else if (
+      (node.type === 'LogicalExpression' && node.operator === '&&')
+      && (
+        (node.left.type === 'Literal' && !node.left.value)
+        || (node.right.type === 'Literal' && !node.right.value)
+      )
+    ) {
+      return {
+        type: 'Literal',
+        value: false,
+      };
+    } else if (
+      (node.type === 'LogicalExpression' && node.operator === '||')
+      && (
+        (node.left.type === 'Literal' && node.left.value)
+        || (node.right.type === 'Literal' && node.right.value)
+      )
+    ) {
+      return {
+        type: 'Literal',
+        value: true,
+      };
+    } else if (
+      (node.type === 'LogicalExpression' && node.operator === '&&')
+      && (
+        (node.left.type === 'Literal' && node.left.value)
+        || (node.right.type === 'Literal' && node.right.value)
+      )
+    ) {
+      return (node.left.type === 'Literal' && node.left.value)
+        ? node.right : node.left;
+    } else if (
+      (node.type === 'LogicalExpression' && node.operator === '||')
+      && (
+        (node.left.type === 'Literal' && !node.left.value)
+        || (node.right.type === 'Literal' && !node.right.value)
+      )
+    ) {
+      return (node.left.type === 'Literal' && !node.left.value)
+        ? node.left : node.right;
+    } else {
+      return node;
+    }
+  });
+}
+
 function makeResidual(transAst, paramMap, trace) {
-  var subbedAst = subsituteVariables(transAst, trace);
-  var subAst = utils.astMap(subbedAst, function(leaf) {
+  var evaledAst = pEval(transAst, trace);
+  var subAst = utils.astMap(evaledAst, function(leaf) {
     return leaf;
   }, function (node) {
     if (node.type === 'IfStatement') {
-      if (hasIdentifier(node.test)) {
+      if (
+        hasIdentifier(node.test)
+        || (node.test.type !== 'Literal' || !!node.test.value)
+      ) {
         return node;
       } else {
         return node.alternate;
@@ -203,6 +268,7 @@ module.exports = {
   astToJS: astToJS,
   subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,
+  pEval: pEval,
   makeResidual: makeResidual,
   correctOne: correctOne,
 }
