@@ -5,6 +5,7 @@ const {
   makeResidual,
   extractVariables,
   correctOne,
+  correctAll,
 } = require('../src/');
 
 test('astToJS', () => {
@@ -250,9 +251,7 @@ if (state == 'A' && b.value < 1) {
   }
   const correction = 'B';
 
-  const correctedAst = correctOne(transAst, parameterMap, trace, correction);
+  const formula = correctOne(transAst, parameterMap, trace, correction);
 
-  console.log(correctedAst);
-
-  expect(false).toBe(true);
+  expect(formula).toBe('(= "B" (ite (and (= state "A") (< (value b) 1)) "A" (ite (and (= state "A") (< (value b) 2)) "B" "C")))');
 });
