@@ -5,6 +5,7 @@ const {
   makeResidual,
   subsituteVariables,
   extractVariables,
+  correctOne,
 } = require('../src/');
 
 test('astRemoveNode', () => {
@@ -376,12 +377,12 @@ test('extractVariables', () => {
 
 test('makeResidual', () => {
   const transAst = parser.parse(`
-if (state == 'A' && b.value > 2) {
+if (state == 'A' && b.value < 1) {
   return 'A';
-} else if (state == 'A' && b.value < paramB) {
-  return 'C';
-} else {
+} else if (state == 'A' && b.value < paramA) {
   return 'B';
+} else {
+  return 'C';
 }
 `);
   const parameterMap = {
@@ -394,86 +395,88 @@ if (state == 'A' && b.value > 2) {
 
   const residualAst = makeResidual(transAst, parameterMap, trace);
 
+  console.log(astToJS(residualAst));
+
   expect(residualAst).toEqual({
-        "type": "Program",
-        "body": [
-          {
-            "type": "IfStatement",
-            "test": {
-              "type": "LogicalExpression",
-              "operator": "&&",
-              "left": {
-                "type": "BinaryExpression",
-                "operator": "==",
-                "left": {
-                  "type": "Literal",
-                  "value": "A"
-                },
-                "right": {
-                  "type": "Literal",
-                  "value": "A"
-                }
-              },
-              "right": {
-                "type": "BinaryExpression",
-                "operator": "<",
-                "left": {
-                  "type": "Literal",
-                  "value": 0
-                },
-                "right": {
-                  "type": "Identifier",
-                  "name": "paramB"
-                }
-              }
+    "type": "Program",
+    "body": [
+      {
+        "type": "IfStatement",
+        "test": {
+          "type": "LogicalExpression",
+          "operator": "&&",
+          "left": {
+            "type": "BinaryExpression",
+            "operator": "==",
+            "left": {
+              "type": "Literal",
+              "value": "A"
             },
-            "consequent": {
-              "type": "BlockStatement",
-              "body": [
-                {
-                  "type": "ReturnStatement",
-                  "argument": {
-                    "type": "Literal",
-                    "value": "C"
-                  }
-                }
-              ]
+            "right": {
+              "type": "Literal",
+              "value": "A"
+            }
+          },
+          "right": {
+            "type": "BinaryExpression",
+            "operator": "<",
+            "left": {
+              "type": "Literal",
+              "value": 0
             },
-            "alternate": {
-              "type": "BlockStatement",
-              "body": [
-                {
-                  "type": "ReturnStatement",
-                  "argument": {
-                    "type": "Literal",
-                    "value": "B"
-                  }
-                }
-              ]
+            "right": {
+              "type": "Identifier",
+              "name": "paramA"
             }
           }
-        ]
-      });
+        },
+        "consequent": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Literal",
+                "value": "B"
+              }
+            }
+          ]
+        },
+        "alternate": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Literal",
+                "value": "C"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  });
 });
 
 test('correctOne', () => {
   const transAst = parser.parse(`
-if (state == 'A' && b.value > 2) {
+if (state == 'A' && b.value < 1) {
   return 'A';
 } else if (state == 'A' && b.value < paramB) {
-  return 'C';
-} else {
   return 'B';
+} else {
+  return 'C';
 }
 `);
   const parameterMap = {
-    paramA: 2,
+    paramB: 2,
   };
   const trace = {
     state: 'A',
     b: {value: 0},
   }
-  const correction = {};
+  const correction = 'B';
 
   const correctedAst = correctOne(transAst, parameterMap, trace, correction);
 

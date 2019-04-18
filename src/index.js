@@ -180,22 +180,17 @@ function makeResidual(transAst, paramMap, trace) {
     }
   });
 
-  var subbedSubAst = subsituteVariables(subAst, paramMap);
-  return subbedSubAst;
+  // var subbedSubAst = subsituteVariables(subAst, paramMap);
+  return subAst;
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
   var residualAst = makeResidual(transAst, paramMap, trace);
-
-  var params = extractVariables(residualAst);
-
-  console.log('params', params);
-
-  return undefined;
+  // var params = extractVariables(residualAst);
+  return (`(= ${correction} ${js2smt2.interpret(residualAst)})`);
 }
 
-function correctAll(transAst, paramMap, trace, corrections) {
-  // iterate and do XOR
+function correctAll(transAst, paramMap, traces, corrections) {
   return undefined;
 }
 
@@ -209,4 +204,5 @@ module.exports = {
   subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,
   makeResidual: makeResidual,
+  correctOne: correctOne,
 }
