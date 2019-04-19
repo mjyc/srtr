@@ -234,12 +234,12 @@ test('extractVariables', () => {
 
 test('correctOne', () => {
   const transAst = parser.parse(`
-if (state == 'A' && b.value < 1) {
-  return 'A';
-} else if (state == 'A' && b.value < paramB) {
+if (state == 'A' && b.value > paramA) {
   return 'B';
+} else if (state == 'A' && b.value > paramB) {
+  return 'A';
 } else {
-  return 'C';
+  return state;
 }
 `);
   const parameterMap = {
@@ -253,5 +253,53 @@ if (state == 'A' && b.value < 1) {
 
   const formula = correctOne(transAst, parameterMap, trace, correction);
 
-  expect(formula).toBe('(= "B" (ite (and (= state "A") (< (value b) 1)) "A" (ite (and (= state "A") (< (value b) 2)) "B" "C")))');
+  expect(formula).toBe('(= "B" (ite (> 0 (+ paramA delta_paramA)) "B" (ite (> 0 (+ 2 delta_paramB)) "A" "A")))');
+});
+
+test('correctAll', () => {
+  const transAst = parser.parse(`
+if (state == 'A' && b.value > paramA) {
+  return 'B';
+} else if (state == 'B' && b.value <= paramA) {
+  return 'A';
+} else {
+  return state;
+}
+`);
+  const parameterMap = {
+    paramA: 2,
+  };
+  const traces = [
+    {
+      timestamp: 0,
+      trace: {
+        state: 'A',
+        b: {value: 1},
+      }
+    },
+    {
+      timestamp: 1,
+      trace: {
+        state: 'B',
+        b: {value: -1},
+      }
+    }
+  ]
+  const corrections = [
+    {
+      timestamp: 0,
+      correction: 'B'
+    },
+    {
+      timestamp: 1,
+      correction: 'A'
+    }
+  ];
+
+  console.log(astToJS(makeResidual(transAst, traces[0].trace)));
+
+  const formula = correctAll(transAst, parameterMap, traces, corrections);
+  // console.log('formula', formula);
+
+  expect(true).toBe(false);
 });

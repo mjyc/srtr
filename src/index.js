@@ -98,7 +98,7 @@ function hasIdentifier(tree) {
 }
 
 function pEval(ast, variableMap) {
-  const subbedAst = subsituteVariables(ast, variableMap);
+  var subbedAst = subsituteVariables(ast, variableMap);
   return utils.astMap(subbedAst, function (leaf) {
     return leaf;
   }, function (node) {
@@ -222,14 +222,45 @@ function extractVariables(ast) {
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
-  var residualAst = makeResidual(transAst, paramMap, trace);
-  const c = typeof correction === 'string'
+  var residualAst = makeResidual(transAst, trace);
+  var params = extractVariables(residualAst);
+  const paramReplacedAst = utils.astMap(residualAst, function (leaf) {
+    return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
+      type: 'BinaryExpression',
+      operator: '+',
+      left: {
+         type: 'Identifier',
+         name: leaf.name,
+      },
+      right: {
+         type: 'Identifier',
+         name: `delta_${leaf.name}`,
+      },
+    } : leaf;
+  }, function (node) {
+    return node;
+  });
+  const subbedAst = subsituteVariables(paramReplacedAst, paramMap);
+  var c = typeof correction === 'string'
     ? JSON.stringify(correction) : correction;
-  return (`(= ${c} ${js2smt2.interpret(residualAst)})`);
+  var formula = `(= ${c} ${js2smt2.interpret(subbedAst)})`;
+  return formula;
 }
 
 function correctAll(transAst, paramMap, traces, corrections) {
-  return undefined;
+  var H = 1;
+  var formula = `true`;
+  for (var i = 0; i < corrections.length; i++) {
+    var c = corrections[i]
+    var t = traces.filter(function(ti) {
+      return ti.timestamp === c.timestamp;
+    })[0];
+    // console.log('whhhhaat?');
+    var phi = correctOne(transAst, paramMap, t.trace, c.correction);
+    // console.log('phi', i, phi);
+    formula = `(and ${formula} ((= w${i} ${H}) xor (and (= w${i} 0) ${phi})))`
+  }
+  return formula;
 }
 
 function srtr(transAst, paramMap, trace, corrections) {
@@ -243,4 +274,5 @@ module.exports = {
   pEval: pEval,
   makeResidual: makeResidual,
   correctOne: correctOne,
+  correctAll: correctAll,
 }
