@@ -153,16 +153,8 @@ function pEval(ast, variableMap) {
     ) {
       return (node.left.type === 'Literal' && !node.left.value)
         ? node.left : node.right;
-    } else if (node.type === 'ReturnStatement') {
-      return (node.argument.type !== 'Literal') ? node : null;
-    } else if (node.type === 'BlockStatement') {
-      return (node.body.filter(function (b) {return b !== null;}).length > 0)
-        ? node : null;
     } else if (node.type === 'IfStatement') {
       return (node.test.type !== 'Literal') ? node : node.alternate;
-    } else if (node.type === 'Program') {
-      return (node.body.filter(function (b) {return b !== null;}).length > 0)
-        ? node : null;
     } else {
       return node;
     }
@@ -234,7 +226,7 @@ function extractVariables(ast) {
 function correctOne(transAst, paramMap, trace, correction) {
   var residualAst = makeResidual(transAst, trace);
   var params = extractVariables(residualAst);
-  const paramReplacedAst = utils.astMap(residualAst, function (leaf) {
+  var paramReplacedAst = utils.astMap(residualAst, function (leaf) {
     return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
       type: 'BinaryExpression',
       operator: '+',
@@ -250,7 +242,7 @@ function correctOne(transAst, paramMap, trace, correction) {
   }, function (node) {
     return node;
   });
-  const subbedAst = subsituteVariables(paramReplacedAst, paramMap);
+  var subbedAst = subsituteVariables(paramReplacedAst, paramMap);
   var c = typeof correction === 'string'
     ? JSON.stringify(correction) : correction;
   var formula = `(= ${c} ${js2smt2.interpret(subbedAst)})`;
@@ -269,21 +261,23 @@ function correctAll(transAst, paramMap, traces, corrections, options) {
     var phi = correctOne(transAst, paramMap, t.trace, c.correction);
     return `(and ${acc} (xor (= w${i} ${H}) (and (= w${i} 0) ${phi})))`;
   }, `true`);
+  return formula;
+}
 
+function srtr(transAst, paramMap, traces, corrections, options) {
+  var formula = correctAll(transAst, paramMap, traces, corrections, options);
   var weights = corrections.map(function (c, i) {return `w${i}`;});
   var deltas = Object.keys(paramMap)
     .map(function (name) {return `delta_${name}`;});
-  var declarations = weights.concat(deltas).map(function (name) {
-    return `(declare-const ${name} Real)`;
-  }).join('\n');
+  var declarations = `(define-fun absolute ((x Real)) Real
+  (ite (>= x 0) x (- x)))`.concat(
+    weights.concat(deltas).map(function (name) {
+      return `(declare-const ${name} Real)`;
+    }).join('\n')
+  );
   var objectives = `(assert ${formula})
-(minimize (+ ${weights.join(' ')} ${deltas.join(' ')}))`
-
+(minimize (+ ${weights.join(' ')} ${deltas.map(function(d) {return `(absolute ${d}`}).join(' ')})))`
   return `${declarations}\n${objectives}`;
-}
-
-function srtr(transAst, paramMap, trace, corrections) {
-  return undefined;
 }
 
 module.exports = {
@@ -294,4 +288,5 @@ module.exports = {
   makeResidual: makeResidual,
   correctOne: correctOne,
   correctAll: correctAll,
+  srtr: srtr,
 }

@@ -7,6 +7,7 @@ const {
   extractVariables,
   correctOne,
   correctAll,
+  srtr,
 } = require('../src/');
 
 test('astToJS', () => {
@@ -52,6 +53,7 @@ test('subsituteVariables', () => {
       value: 0,
     }
   };
+
   const subbedAst = subsituteVariables(ast, varMap);
   expect(astToJS(subbedAst))
     .toBe(`((("hello" == "hello") && ("there" == "there")) && ((0 * 1) === 0))`);
@@ -64,11 +66,12 @@ test('subsituteVariables - MemberExpression', () => {
       type: 'there',
     }
   };
+
   const astSubed = subsituteVariables(ast, varMap);
   expect(astToJS(astSubed)).toBe(`"there"`);
 });
 
-test('pEval', () => {
+test('pEval - transition function', () => {
   const transAst = parser.parse(`
 if (state == 'A' && b.value > param) {
   return 'B';
@@ -80,6 +83,7 @@ if (state == 'A' && b.value > param) {
     state: 'A',
     b: {value: 1},
   }
+
   const evaledAst = pEval(transAst, varMap);
   expect(astToJS(evaledAst))
     .toBe(`if ((1 > param)) { return "B"; } else { return "A"; }`);
@@ -97,8 +101,9 @@ if (state == 'A' && b.value > param) {
     state: 'B',
     b: {value: 1},
   }
+
   const evaledAst = pEval(transAst, varMap);
-  expect(evaledAst).toBe(null);
+  expect(astToJS(evaledAst)).toBe(`return "B";`);
 });
 
 test('pEval - multiple branches', () => {
@@ -111,19 +116,18 @@ if (state == 'A' && b.value > param) {
   return state;
 }
 `);
-  const trace = {
+  const varMap = {
     state: 'A',
     b: {value: -1},
   }
 
-  const residualAst = makeResidual(transAst, trace);
-
-  expect(astToJS(residualAst))
-    .toBe(`if ((0 < param1)) { return "C"; } else { return "A"; }`);
+  const evaledAst = pEval(transAst, varMap);
+  expect(astToJS(evaledAst))
+    .toBe(`if ((-1 > param)) { return \"B\"; } else { return \"A\"; }`);
 });
 
 
-test('makeResidual - two from states', () => {
+test('pEval - multiple branches with multiple from states', () => {
   const transAst = parser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
@@ -133,14 +137,13 @@ if (state == 'A' && b.value > paramA) {
   return state;
 }
 `);
-  const trace = {
+  const varMap = {
     state: 'B',
     b: {value: 0},
   }
 
-  const residualAst = makeResidual(transAst, trace);
-  console.log(JSON.stringify(residualAst, null, 2));
-  expect(astToJS(residualAst))
+  const evaledAst = makeResidual(transAst, varMap);
+  expect(astToJS(evaledAst))
     .toEqual(`if ((0 > paramB)) { return "C"; } else { return "B"; }`);
 });
 
@@ -148,6 +151,7 @@ test('extractVariables', () => {
   const ast = parser.parse(
       `a == 'hello' && b.type == 'there' && b.value * 1 === 0`);
   const variables = extractVariables(ast);
+
   expect(variables.sort()).toEqual(["a", "b"]);
 });
 
@@ -172,15 +176,10 @@ if (state == 'A' && b.value > paramA) {
   const correction = 'A';
 
   const formula = correctOne(transAst, parameterMap, trace, correction);
-
   expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
-
-  // const formula = correctOne(transAst, parameterMap, trace, correction);
-
-  // expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
 });
 
-test('correctAll', () => {
+test('srtr - transition function', () => {
   const transAst = parser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
@@ -219,17 +218,20 @@ if (state == 'A' && b.value > paramA) {
       correction: 'A'
     }
   ];
-
   const options = {H: 1};
-  const formula = correctAll(
-      transAst, parameterMap, traces, corrections, options);
-  console.log('formula\n', formula);
 
-  expect(true).toBe(false);
+  const formula = srtr(
+      transAst, parameterMap, traces, corrections, options);
+  expect(formula).toBe(`(define-fun absolute ((x Real)) Real
+  (ite (>= x 0) x (- x)))(declare-const w0 Real)
+(declare-const w1 Real)
+(declare-const delta_paramA Real)
+(assert (and (and true (xor (= w0 1) (and (= w0 0) (= "B" (ite (> 1 (+ 2 delta_paramA)) "B" "A"))))) (xor (= w1 1) (and (= w1 0) (= "A" (ite (<= -1 (+ 2 delta_paramA)) "A" "B"))))))
+(minimize (+ w0 w1 (absolute delta_paramA)))`);
 });
 
 
-test('correctAll2', () => {
+test('srtr - unsat-able traces', () => {
   const transAst = parser.parse(`
 if (state == 'A' && input > paramA) {
   return 'B';
@@ -262,13 +264,13 @@ if (state == 'A' && input > paramA) {
         input: 0.5,
       }
     },
-    // {
-    //   timestamp: 3,
-    //   trace: {
-    //     state: 'A',
-    //     input: -1,
-    //   }
-    // },
+    {
+      timestamp: 3,
+      trace: {
+        state: 'A',
+        input: -1,
+      }
+    },
     {
       timestamp: 4,
       trace: {
@@ -290,13 +292,13 @@ if (state == 'A' && input > paramA) {
         input: -0.5,
       }
     },
-    // {
-    //   timestamp: 7,
-    //   trace: {
-    //     state: 'A',
-    //     input: 1,
-    //   }
-    // },
+    {
+      timestamp: 7,
+      trace: {
+        state: 'A',
+        input: 1,
+      }
+    },
   ]
   const corrections = [
     {
@@ -311,10 +313,10 @@ if (state == 'A' && input > paramA) {
       timestamp: 2,
       correction: 'B'
     },
-    // {
-    //   timestamp: 3,
-    //   correction: 'B'
-    // },
+    {
+      timestamp: 3,
+      correction: 'B'
+    },
     {
       timestamp: 4,
       correction: 'A'
@@ -327,16 +329,26 @@ if (state == 'A' && input > paramA) {
       timestamp: 6,
       correction: 'A'
     },
-    // {
-    //   timestamp: 7,
-    //   correction: 'A'
-    // }
+    {
+      timestamp: 7,
+      correction: 'A'
+    }
   ];
 
   const options = {H: 1};
-  const formula = correctAll(
-      transAst, parameterMap, traces, corrections, options);
-  console.log('formula\n', formula);
 
-  expect(true).toBe(false);
+  const formula = srtr(
+      transAst, parameterMap, traces, corrections, options);
+  expect(formula).toBe(`(define-fun absolute ((x Real)) Real
+  (ite (>= x 0) x (- x)))(declare-const w0 Real)
+(declare-const w1 Real)
+(declare-const w2 Real)
+(declare-const w3 Real)
+(declare-const w4 Real)
+(declare-const w5 Real)
+(declare-const w6 Real)
+(declare-const w7 Real)
+(declare-const delta_paramA Real)
+(assert (and (and (and (and (and (and (and (and true (xor (= w0 1) (and (= w0 0) (= "B" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w1 1) (and (= w1 0) (= "B" (ite (> 1.5 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w2 1) (and (= w2 0) (= "B" (ite (> 0.5 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w3 1) (and (= w3 0) (= "B" (ite (> -1 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w4 1) (and (= w4 0) (= "A" (ite (> -1 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w5 1) (and (= w5 0) (= "A" (ite (> -1.5 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w6 1) (and (= w6 0) (= "A" (ite (> -0.5 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w7 1) (and (= w7 0) (= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))))))
+(minimize (+ w0 w1 w2 w3 w4 w5 w6 w7 (absolute delta_paramA)))`);
 });
