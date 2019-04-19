@@ -37,20 +37,7 @@ if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
 }
 `);
 
-  expect(Function(`
-"use strict";
-return (function (a, b) {
-  ${astToJS(ast.body[0])}
-})('hello', {type: 'there' , value: 0});
-`)()).toEqual({state: 'branch1', outputs: {action1: 'a1', action2: 100}});
-
-  expect(Function(`
-"use strict";
-return (function (a, b) {
-  ${astToJS(ast.body[0])}
-})('jello', {type: 'whirl' , value: 1});
-`)()).toEqual({state: 'branch2', outputs: {action1: 'a2', action2: 200}});
-
+  expect(astToJS(ast)).toBe(`if ((((a == "hello") && (b["type"] == "there")) && ((b["value"] * 1) === 0))) { return {"state": "branch1", "outputs": {"action1": "a1", "action2": 100}}; } else { if ((((a == "jello") && (b["type"] == "whirl")) && ((b["value"] + 1) === 2))) { return {"state": "branch2", "outputs": {"action1": "a2", "action2": 200}}; } else { return {"state": "branch3", "outputs": {"action1": "a3", "action2": 300}}; } }`);
 });
 
 test('subsituteVariables', () => {
@@ -82,12 +69,12 @@ test('subsituteVariables - MemberExpression', () => {
 
 test('makeResidual', () => {
   const transAst = parser.parse(`
-if (state == 'A' && b.value < 1) {
-  return 'A';
+if (state == 'A' && b.value > 10) {
+  return 'B';
 } else if (state == 'A' && b.value < paramA) {
-  return 'B';
-} else {
   return 'C';
+} else {
+  return state;
 }
 `);
   const trace = {
@@ -97,88 +84,7 @@ if (state == 'A' && b.value < 1) {
 
   const residualAst = makeResidual(transAst, trace);
 
-  expect(residualAst).toEqual({
-    "type": "Program",
-    "body": [
-      {
-        "type": "IfStatement",
-        "test": {
-          "type": "Literal",
-          "value": true
-        },
-        "consequent": {
-          "type": "BlockStatement",
-          "body": [
-            {
-              "type": "ReturnStatement",
-              "argument": {
-                "type": "Literal",
-                "value": "A"
-              }
-            }
-          ]
-        },
-        "alternate": {
-          "type": "IfStatement",
-          "test": {
-            "type": "BinaryExpression",
-            "operator": "<",
-            "left": {
-              "type": "Literal",
-              "value": 0
-            },
-            "right": {
-              "type": "Identifier",
-              "name": "paramA"
-            }
-          },
-          "consequent": {
-            "type": "BlockStatement",
-            "body": [
-              {
-                "type": "ReturnStatement",
-                "argument": {
-                  "type": "Literal",
-                  "value": "B"
-                }
-              }
-            ]
-          },
-          "alternate": {
-            "type": "BlockStatement",
-            "body": [
-              {
-                "type": "ReturnStatement",
-                "argument": {
-                  "type": "Literal",
-                  "value": "C"
-                }
-              }
-            ]
-          }
-        }
-      }
-    ]
-  });
-});
-
-test('makeResidual - two "from" states', () => {
-  const transAst = parser.parse(`
-if (state == 'A' && b.value < paramA) {
-  return 'A';
-} else if (state == 'B' && b.value < paramB) {
-  return 'B';
-} else {
-  return 'C';
-}
-`);
-  const trace = {
-    state: 'A',
-    b: {value: 0},
-  }
-
-  const residualAst = makeResidual(transAst, trace);
-
+  // if ((0 < paramA)) { return "C"; } else { return "A"; }
   expect(residualAst).toEqual({
     "type": "Program",
     "body": [
@@ -203,7 +109,7 @@ if (state == 'A' && b.value < paramA) {
               "type": "ReturnStatement",
               "argument": {
                 "type": "Literal",
-                "value": "A"
+                "value": "C"
               }
             }
           ]
@@ -215,7 +121,71 @@ if (state == 'A' && b.value < paramA) {
               "type": "ReturnStatement",
               "argument": {
                 "type": "Literal",
-                "value": "C"
+                "value": "A"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  });
+});
+
+
+test('makeResidual - two from states', () => {
+  const transAst = parser.parse(`
+if (state == 'A' && b.value > paramA) {
+  return 'B';
+} else if (state == 'B' && b.value > paramB) {
+  return 'C';
+} else {
+  return state;
+}
+`);
+  const trace = {
+    state: 'A',  // try 'B' or 'C'
+    b: {value: 0},
+  }
+
+  const residualAst = makeResidual(transAst, trace);
+
+  expect(residualAst).toEqual({
+    "type": "Program",
+    "body": [
+      {
+        "type": "IfStatement",
+        "test": {
+          "type": "BinaryExpression",
+          "operator": ">",
+          "left": {
+            "type": "Literal",
+            "value": 0
+          },
+          "right": {
+            "type": "Identifier",
+            "name": "paramA"
+          }
+        },
+        "consequent": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Literal",
+                "value": "B"
+              }
+            }
+          ]
+        },
+        "alternate": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Literal",
+                "value": "A"
               }
             }
           ]
@@ -236,25 +206,25 @@ test('correctOne', () => {
   const transAst = parser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
-} else if (state == 'A' && b.value > paramB) {
-  return 'A';
+} else if (state == 'B' && b.value > paramB) {
+  return 'C';
 } else {
   return state;
 }
 `);
   const parameterMap = {
     paramA: 0,
-    paramB: 2,
+    paramB: 1,
   };
   const trace = {
     state: 'A',
-    b: {value: 0},
+    b: {value: 1},
   }
-  const correction = 'B';
+  const correction = 'A';
 
   const formula = correctOne(transAst, parameterMap, trace, correction);
 
-  expect(formula).toBe('(= "B" (ite (> 0 (+ 0 delta_paramA)) "B" (ite (> 0 (+ 2 delta_paramB)) "A" "A")))');
+  expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
 });
 
 test('correctAll', () => {
