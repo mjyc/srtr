@@ -251,20 +251,25 @@ function correctAll(transAst, paramMap, traces, corrections, options) {
   if (typeof options === 'undefined') {
     options = {};
   }
-  var H = options;
-  var formula = `true`;
-  for (var i = 0; i < corrections.length; i++) {
-    var c = corrections[i]
+  var H = typeof options === 'undefined' ? 0 : options.H;
+  var formula = corrections.reduce(function(acc, c, i) {
     var t = traces.filter(function(ti) {
       return ti.timestamp === c.timestamp;
     })[0];
     var phi = correctOne(transAst, paramMap, t.trace, c.correction);
-    console.log('phi', i, phi);
-    declarations += `(declare-const w${i} Real\n)`;
-    formula = `(and ${formula} (xor (= w${i} ${H}) (and (= w${i} 0) ${phi})))`
-  }
+    return `(and ${acc} (xor (= w${i} ${H}) (and (= w${i} 0) ${phi})))`;
+  }, `true`);
 
-  return declarations + formula;
+  var weights = corrections.map(function (c, i) {return `w${i}`;});
+  var deltas = Object.keys(paramMap)
+    .map(function (name) {return `delta_${name}`;});
+  var declarations = weights.concat(deltas).map(function (name) {
+    return `(declare-const ${name} Real)`;
+  }).join('\n');
+  var objectives = `(assert ${formula})
+(minimize (+ ${weights.join(' ')} ${deltas.join(' ')}))`
+
+  return `${declarations}\n${objectives}`;
 }
 
 function srtr(transAst, paramMap, trace, corrections) {

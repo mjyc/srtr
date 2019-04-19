@@ -297,10 +297,123 @@ if (state == 'A' && b.value > paramA) {
     }
   ];
 
-  console.log(astToJS(makeResidual(transAst, traces[0].trace)));
+  const options = {H: 1};
+  const formula = correctAll(
+      transAst, parameterMap, traces, corrections, options);
+  console.log('formula\n', formula);
 
-  const formula = correctAll(transAst, parameterMap, traces, corrections);
-  console.log('formula', formula);
+  expect(true).toBe(false);
+});
+
+
+test('correctAll2', () => {
+  const transAst = parser.parse(`
+if (state == 'A' && a > paramA) {
+  return 'B';
+} else {
+  return state;
+}
+`);
+  const parameterMap = {
+    paramA: 0,
+  };
+  const traces = [
+    {
+      timestamp: 0,
+      trace: {
+        state: 'B',
+        a: 1,
+      }
+    },
+    {
+      timestamp: 1,
+      trace: {
+        state: 'B',
+        a: 1.5,
+      }
+    },
+    {
+      timestamp: 2,
+      trace: {
+        state: 'B',
+        a: 0.5,
+      }
+    },
+    // {
+    //   timestamp: 3,
+    //   trace: {
+    //     state: 'B',
+    //     a: -1,
+    //   }
+    // },
+    {
+      timestamp: 4,
+      trace: {
+        state: 'A',
+        a: -1,
+      }
+    },
+    {
+      timestamp: 5,
+      trace: {
+        state: 'A',
+        a: -1.5,
+      }
+    },
+    {
+      timestamp: 6,
+      trace: {
+        state: 'A',
+        a: -0.5,
+      }
+    },
+    // {
+    //   timestamp: 7,
+    //   trace: {
+    //     state: 'A',
+    //     a: 1,
+    //   }
+    // },
+  ]
+  const corrections = [
+    {
+      timestamp: 0,
+      correction: 'B'
+    },
+    {
+      timestamp: 1,
+      correction: 'A'
+    },
+    {
+      timestamp: 2,
+      correction: 'A'
+    },
+    // {
+    //   timestamp: 3,
+    //   correction: 'A'
+    // },
+    {
+      timestamp: 4,
+      correction: 'B'
+    },
+    {
+      timestamp: 5,
+      correction: 'B'
+    },
+    {
+      timestamp: 6,
+      correction: 'B'
+    },
+    // {
+    //   timestamp: 7,
+    //   correction: 'B'
+    // }
+  ];
+
+  const options = {H: 1};
+  const formula = correctAll(
+      transAst, parameterMap, traces, corrections, options);
+  console.log('formula\n', formula);
 
   expect(true).toBe(false);
 });
