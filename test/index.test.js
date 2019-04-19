@@ -243,6 +243,7 @@ if (state == 'A' && b.value > paramA) {
 }
 `);
   const parameterMap = {
+    paramA: 0,
     paramB: 2,
   };
   const trace = {
@@ -253,7 +254,7 @@ if (state == 'A' && b.value > paramA) {
 
   const formula = correctOne(transAst, parameterMap, trace, correction);
 
-  expect(formula).toBe('(= "B" (ite (> 0 (+ paramA delta_paramA)) "B" (ite (> 0 (+ 2 delta_paramB)) "A" "A")))');
+  expect(formula).toBe('(= "B" (ite (> 0 (+ 0 delta_paramA)) "B" (ite (> 0 (+ 2 delta_paramB)) "A" "A")))');
 });
 
 test('correctAll', () => {
