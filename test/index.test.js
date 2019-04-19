@@ -2,6 +2,7 @@ const {parser} = require('js2smt2');
 const {
   astToJS,
   subsituteVariables,
+  pEval,
   makeResidual,
   extractVariables,
   correctOne,
@@ -37,7 +38,8 @@ if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
 }
 `);
 
-  expect(astToJS(ast)).toBe(`if ((((a == "hello") && (b["type"] == "there")) && ((b["value"] * 1) === 0))) { return {"state": "branch1", "outputs": {"action1": "a1", "action2": 100}}; } else { if ((((a == "jello") && (b["type"] == "whirl")) && ((b["value"] + 1) === 2))) { return {"state": "branch2", "outputs": {"action1": "a2", "action2": 200}}; } else { return {"state": "branch3", "outputs": {"action1": "a3", "action2": 300}}; } }`);
+  expect(astToJS(ast))
+    .toBe(`if ((((a == "hello") && (b["type"] == "there")) && ((b["value"] * 1) === 0))) { return {"state": "branch1", "outputs": {"action1": "a1", "action2": 100}}; } else { if ((((a == "jello") && (b["type"] == "whirl")) && ((b["value"] + 1) === 2))) { return {"state": "branch2", "outputs": {"action1": "a2", "action2": 200}}; } else { return {"state": "branch3", "outputs": {"action1": "a3", "action2": 300}}; } }`);
 });
 
 test('subsituteVariables', () => {
@@ -50,8 +52,8 @@ test('subsituteVariables', () => {
       value: 0,
     }
   };
-  const astSubed = subsituteVariables(ast, varMap);
-  expect(astToJS(astSubed))
+  const subbedAst = subsituteVariables(ast, varMap);
+  expect(astToJS(subbedAst))
     .toBe(`((("hello" == "hello") && ("there" == "there")) && ((0 * 1) === 0))`);
 });
 
@@ -63,15 +65,47 @@ test('subsituteVariables - MemberExpression', () => {
     }
   };
   const astSubed = subsituteVariables(ast, varMap);
-  expect(astToJS(astSubed))
-    .toBe(`"there"`);
+  expect(astToJS(astSubed)).toBe(`"there"`);
 });
 
-test('makeResidual', () => {
+test('pEval', () => {
   const transAst = parser.parse(`
-if (state == 'A' && b.value > 10) {
+if (state == 'A' && b.value > param) {
   return 'B';
-} else if (state == 'A' && b.value < paramA) {
+} else {
+  return state;
+}
+`);
+  const varMap = {
+    state: 'A',
+    b: {value: 1},
+  }
+  const evaledAst = pEval(transAst, varMap);
+  expect(astToJS(evaledAst))
+    .toBe(`if ((1 > param)) { return "B"; } else { return "A"; }`);
+});
+
+test('pEval - return', () => {
+  const transAst = parser.parse(`
+if (state == 'A' && b.value > param) {
+  return 'B';
+} else {
+  return state;
+}
+`);
+  const varMap = {
+    state: 'B',
+    b: {value: 1},
+  }
+  const evaledAst = pEval(transAst, varMap);
+  expect(evaledAst).toBe(null);
+});
+
+test('pEval - multiple branches', () => {
+  const transAst = parser.parse(`
+if (state == 'A' && b.value > param) {
+  return 'B';
+} else if (state == 'A' && b.value < 0) {
   return 'C';
 } else {
   return state;
@@ -79,56 +113,13 @@ if (state == 'A' && b.value > 10) {
 `);
   const trace = {
     state: 'A',
-    b: {value: 0},
+    b: {value: -1},
   }
 
   const residualAst = makeResidual(transAst, trace);
 
-  // if ((0 < paramA)) { return "C"; } else { return "A"; }
-  expect(residualAst).toEqual({
-    "type": "Program",
-    "body": [
-      {
-        "type": "IfStatement",
-        "test": {
-          "type": "BinaryExpression",
-          "operator": "<",
-          "left": {
-            "type": "Literal",
-            "value": 0
-          },
-          "right": {
-            "type": "Identifier",
-            "name": "paramA"
-          }
-        },
-        "consequent": {
-          "type": "BlockStatement",
-          "body": [
-            {
-              "type": "ReturnStatement",
-              "argument": {
-                "type": "Literal",
-                "value": "C"
-              }
-            }
-          ]
-        },
-        "alternate": {
-          "type": "BlockStatement",
-          "body": [
-            {
-              "type": "ReturnStatement",
-              "argument": {
-                "type": "Literal",
-                "value": "A"
-              }
-            }
-          ]
-        }
-      }
-    ]
-  });
+  expect(astToJS(residualAst))
+    .toBe(`if ((0 < param1)) { return "C"; } else { return "A"; }`);
 });
 
 
@@ -143,56 +134,14 @@ if (state == 'A' && b.value > paramA) {
 }
 `);
   const trace = {
-    state: 'A',  // try 'B' or 'C'
+    state: 'B',
     b: {value: 0},
   }
 
   const residualAst = makeResidual(transAst, trace);
-
-  expect(residualAst).toEqual({
-    "type": "Program",
-    "body": [
-      {
-        "type": "IfStatement",
-        "test": {
-          "type": "BinaryExpression",
-          "operator": ">",
-          "left": {
-            "type": "Literal",
-            "value": 0
-          },
-          "right": {
-            "type": "Identifier",
-            "name": "paramA"
-          }
-        },
-        "consequent": {
-          "type": "BlockStatement",
-          "body": [
-            {
-              "type": "ReturnStatement",
-              "argument": {
-                "type": "Literal",
-                "value": "B"
-              }
-            }
-          ]
-        },
-        "alternate": {
-          "type": "BlockStatement",
-          "body": [
-            {
-              "type": "ReturnStatement",
-              "argument": {
-                "type": "Literal",
-                "value": "A"
-              }
-            }
-          ]
-        }
-      }
-    ]
-  });
+  console.log(JSON.stringify(residualAst, null, 2));
+  expect(astToJS(residualAst))
+    .toEqual(`if ((0 > paramB)) { return "C"; } else { return "B"; }`);
 });
 
 test('extractVariables', () => {
@@ -225,6 +174,10 @@ if (state == 'A' && b.value > paramA) {
   const formula = correctOne(transAst, parameterMap, trace, correction);
 
   expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
+
+  // const formula = correctOne(transAst, parameterMap, trace, correction);
+
+  // expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
 });
 
 test('correctAll', () => {

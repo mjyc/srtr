@@ -153,6 +153,16 @@ function pEval(ast, variableMap) {
     ) {
       return (node.left.type === 'Literal' && !node.left.value)
         ? node.left : node.right;
+    } else if (node.type === 'ReturnStatement') {
+      return (node.argument.type !== 'Literal') ? node : null;
+    } else if (node.type === 'BlockStatement') {
+      return (node.body.filter(function (b) {return b !== null;}).length > 0)
+        ? node : null;
+    } else if (node.type === 'IfStatement') {
+      return (node.test.type !== 'Literal') ? node : node.alternate;
+    } else if (node.type === 'Program') {
+      return (node.body.filter(function (b) {return b !== null;}).length > 0)
+        ? node : null;
     } else {
       return node;
     }
