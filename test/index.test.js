@@ -278,7 +278,7 @@ if (state == 'A' && b.value > paramA) {
 
 test('correctAll2', () => {
   const transAst = parser.parse(`
-if (state == 'A' && a > paramA) {
+if (state == 'A' && input > paramA) {
   return 'B';
 } else {
   return state;
@@ -291,57 +291,57 @@ if (state == 'A' && a > paramA) {
     {
       timestamp: 0,
       trace: {
-        state: 'B',
-        a: 1,
+        state: 'A',
+        input: 1,
       }
     },
     {
       timestamp: 1,
       trace: {
-        state: 'B',
-        a: 1.5,
+        state: 'A',
+        input: 1.5,
       }
     },
     {
       timestamp: 2,
       trace: {
-        state: 'B',
-        a: 0.5,
+        state: 'A',
+        input: 0.5,
       }
     },
     // {
     //   timestamp: 3,
     //   trace: {
-    //     state: 'B',
-    //     a: -1,
+    //     state: 'A',
+    //     input: -1,
     //   }
     // },
     {
       timestamp: 4,
       trace: {
         state: 'A',
-        a: -1,
+        input: -1,
       }
     },
     {
       timestamp: 5,
       trace: {
         state: 'A',
-        a: -1.5,
+        input: -1.5,
       }
     },
     {
       timestamp: 6,
       trace: {
         state: 'A',
-        a: -0.5,
+        input: -0.5,
       }
     },
     // {
     //   timestamp: 7,
     //   trace: {
     //     state: 'A',
-    //     a: 1,
+    //     input: 1,
     //   }
     // },
   ]
@@ -352,31 +352,31 @@ if (state == 'A' && a > paramA) {
     },
     {
       timestamp: 1,
-      correction: 'A'
+      correction: 'B'
     },
     {
       timestamp: 2,
-      correction: 'A'
+      correction: 'B'
     },
     // {
     //   timestamp: 3,
-    //   correction: 'A'
+    //   correction: 'B'
     // },
     {
       timestamp: 4,
-      correction: 'B'
+      correction: 'A'
     },
     {
       timestamp: 5,
-      correction: 'B'
+      correction: 'A'
     },
     {
       timestamp: 6,
-      correction: 'B'
+      correction: 'A'
     },
     // {
     //   timestamp: 7,
-    //   correction: 'B'
+    //   correction: 'A'
     // }
   ];
 
