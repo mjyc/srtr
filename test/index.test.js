@@ -299,7 +299,7 @@ if (state == 'A' && b.value > paramA) {
   console.log(astToJS(makeResidual(transAst, traces[0].trace)));
 
   const formula = correctAll(transAst, parameterMap, traces, corrections);
-  // console.log('formula', formula);
+  console.log('formula', formula);
 
   expect(true).toBe(false);
 });

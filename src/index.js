@@ -257,8 +257,8 @@ function correctAll(transAst, paramMap, traces, corrections) {
     })[0];
     // console.log('whhhhaat?');
     var phi = correctOne(transAst, paramMap, t.trace, c.correction);
-    // console.log('phi', i, phi);
-    formula = `(and ${formula} ((= w${i} ${H}) xor (and (= w${i} 0) ${phi})))`
+    console.log('phi', i, phi);
+    formula = `(and ${formula} (xor (= w${i} ${H}) (and (= w${i} 0) ${phi})))`
   }
   return formula;
 }
