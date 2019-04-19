@@ -247,20 +247,24 @@ function correctOne(transAst, paramMap, trace, correction) {
   return formula;
 }
 
-function correctAll(transAst, paramMap, traces, corrections) {
-  var H = 1;
+function correctAll(transAst, paramMap, traces, corrections, options) {
+  if (typeof options === 'undefined') {
+    options = {};
+  }
+  var H = options;
   var formula = `true`;
   for (var i = 0; i < corrections.length; i++) {
     var c = corrections[i]
     var t = traces.filter(function(ti) {
       return ti.timestamp === c.timestamp;
     })[0];
-    // console.log('whhhhaat?');
     var phi = correctOne(transAst, paramMap, t.trace, c.correction);
     console.log('phi', i, phi);
+    declarations += `(declare-const w${i} Real\n)`;
     formula = `(and ${formula} (xor (= w${i} ${H}) (and (= w${i} 0) ${phi})))`
   }
-  return formula;
+
+  return declarations + formula;
 }
 
 function srtr(transAst, paramMap, trace, corrections) {
