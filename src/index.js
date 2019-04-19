@@ -161,38 +161,6 @@ function pEval(ast, variableMap) {
   });
 }
 
-function makeResidual(transAst, trace) {
-  var evaledAst = pEval(transAst, trace);
-  var subAst = utils.astMap(evaledAst, function(leaf) {
-    return leaf;
-  }, function (node) {
-    if (node.type === 'IfStatement') {
-      if (
-        hasIdentifier(node.test)
-        || (node.test.type !== 'Literal' || !!node.test.value)
-      ) {
-        return node;
-      } else {
-        return node.alternate;
-      }
-    } else {
-      return Object.keys(node).reduce(function(prev, k) {
-        if (Array.isArray(node[k])) {
-          prev[k] = node[k].filter(function (n) {return n !== null;})
-        } else if (typeof node[k] === 'object' && node[k] !== null) {
-          prev[k] = node[k];
-        } else {
-          if (node[k] !== null) {
-            prev[k] = node[k];
-          }
-        }
-        return prev;
-      }, {});
-    }
-  });
-  return subAst;
-}
-
 function extractVariables(ast) {
   function extract(ast, vars) {
     if (ast.type === 'Identifier') {
@@ -224,7 +192,7 @@ function extractVariables(ast) {
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
-  var residualAst = makeResidual(transAst, trace);
+  var residualAst = pEval(transAst, trace);
   var params = extractVariables(residualAst);
   var paramReplacedAst = utils.astMap(residualAst, function (leaf) {
     return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
@@ -276,7 +244,7 @@ function srtr(transAst, paramMap, traces, corrections, options) {
     }).join('\n')
   );
   var objectives = `(assert ${formula})
-(minimize (+ ${weights.join(' ')} ${deltas.map(function(d) {return `(absolute ${d}`}).join(' ')})))`
+(minimize (+ ${weights.join(' ')} ${deltas.map(function(d) {return `(absolute ${d})`}).join(' ')}))`
   return `${declarations}\n${objectives}`;
 }
 
@@ -285,7 +253,6 @@ module.exports = {
   subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,
   pEval: pEval,
-  makeResidual: makeResidual,
   correctOne: correctOne,
   correctAll: correctAll,
   srtr: srtr,

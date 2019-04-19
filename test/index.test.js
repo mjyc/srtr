@@ -3,7 +3,6 @@ const {
   astToJS,
   subsituteVariables,
   pEval,
-  makeResidual,
   extractVariables,
   correctOne,
   correctAll,
@@ -142,7 +141,7 @@ if (state == 'A' && b.value > paramA) {
     b: {value: 0},
   }
 
-  const evaledAst = makeResidual(transAst, varMap);
+  const evaledAst = pEval(transAst, varMap);
   expect(astToJS(evaledAst))
     .toEqual(`if ((0 > paramB)) { return "C"; } else { return "B"; }`);
 });
@@ -334,7 +333,6 @@ if (state == 'A' && input > paramA) {
       correction: 'A'
     }
   ];
-
   const options = {H: 1};
 
   const formula = srtr(
