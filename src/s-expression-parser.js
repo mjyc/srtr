@@ -145,8 +145,12 @@ function peg$parse(input, options) {
       peg$c1 = peg$literalExpectation("(", false),
       peg$c2 = ")",
       peg$c3 = peg$literalExpectation(")", false),
-      peg$c4 = function(atoms) {return {type:"Expression",value:atoms}},
-      peg$c5 = function(content) {return {type: "Atom":content}},
+      peg$c4 = function(expr) {
+            return { type: "Expression", value: expr };
+          },
+      peg$c5 = function(atom) {
+            return { type: "Atom", value: atom };
+          },
       peg$c6 = peg$anyExpectation(),
       peg$c7 = peg$otherExpectation("whitespace"),
       peg$c8 = "\t",
@@ -548,9 +552,15 @@ function peg$parse(input, options) {
         if (s3 !== peg$FAILED) {
           s4 = [];
           s5 = peg$parseAtom();
+          if (s5 === peg$FAILED) {
+            s5 = peg$parseExpression();
+          }
           while (s5 !== peg$FAILED) {
             s4.push(s5);
             s5 = peg$parseAtom();
+            if (s5 === peg$FAILED) {
+              s5 = peg$parseExpression();
+            }
           }
           if (s4 !== peg$FAILED) {
             if (input.charCodeAt(peg$currPos) === 41) {
@@ -603,9 +613,6 @@ function peg$parse(input, options) {
       s1 = peg$parseNumericLiteral();
       if (s1 === peg$FAILED) {
         s1 = peg$parseIdentifier();
-        if (s1 === peg$FAILED) {
-          s1 = peg$parseExpression();
-        }
       }
     }
     if (s1 !== peg$FAILED) {

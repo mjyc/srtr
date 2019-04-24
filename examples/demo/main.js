@@ -2,7 +2,7 @@ const spawn = require('child_process').spawn;
 const {interpret, parser} = require('js2smt2');
 const {
   createSRTRSMT2,
-  sparser,
+  sexpParser,
 } = require('../../');
 
 const transAst = parser.parse(`
@@ -73,6 +73,6 @@ p.stdout.on('data', (data) => {
   // console.log(typeof data.toString())
   if (!data.toString().startsWith("sat")) {
     console.log(data.toString());
-    console.log(sparser.parse(data.toString()));
+    console.log(sexpParser.parse(data.toString()));
   }
 });

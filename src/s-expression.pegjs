@@ -1,7 +1,12 @@
 Expression
-  = __ "(" __ atoms:Atom* ")" __ {return {type:"Expression",value:atoms}}
+  = __ "(" __ expr:(Atom / Expression)* ")" __ {
+      return { type: "Expression", value: expr };
+    }
 
-Atom = content:(StringLiteral / NumericLiteral / Identifier / Expression) __ {return {type: "Atom":content}}
+Atom
+  = atom:(StringLiteral / NumericLiteral / Identifier) __ {
+      return { type: "Atom", value: atom };
+    }
 
 
 // from javascript.pegjs with one modification: IdentifierStart has "-"

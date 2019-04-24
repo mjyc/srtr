@@ -264,4 +264,5 @@ module.exports = {
   correctOne: correctOne,
   correctAll: correctAll,
   createSRTRSMT2: createSRTRSMT2,
+  sexpParser: parser,
 }
