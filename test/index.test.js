@@ -6,7 +6,7 @@ const {
   extractVariables,
   correctOne,
   correctAll,
-  srtr,
+  createSRTRSMT2,
 } = require('../src/');
 
 test('astToJS', () => {
@@ -178,7 +178,7 @@ if (state == 'A' && b.value > paramA) {
   expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
 });
 
-test('srtr - transition function', () => {
+test('createSRTRSMT2 - transition function', () => {
   const transAst = parser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
@@ -219,7 +219,7 @@ if (state == 'A' && b.value > paramA) {
   ];
   const options = {H: 1};
 
-  const formula = srtr(
+  const formula = createSRTRSMT2(
       transAst, parameterMap, traces, corrections, options);
   expect(formula).toBe(`(define-fun absolute ((x Real)) Real
   (ite (>= x 0) x (- x)))(declare-const w0 Real)
@@ -230,7 +230,7 @@ if (state == 'A' && b.value > paramA) {
 });
 
 
-test('srtr - unsat-able traces', () => {
+test('createSRTRSMT2 - unsat-able traces', () => {
   const transAst = parser.parse(`
 if (state == 'A' && input > paramA) {
   return 'B';
@@ -335,7 +335,7 @@ if (state == 'A' && input > paramA) {
   ];
   const options = {H: 1};
 
-  const formula = srtr(
+  const formula = createSRTRSMT2(
       transAst, parameterMap, traces, corrections, options);
   expect(formula).toBe(`(define-fun absolute ((x Real)) Real
   (ite (>= x 0) x (- x)))(declare-const w0 Real)

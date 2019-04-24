@@ -232,7 +232,7 @@ function correctAll(transAst, paramMap, traces, corrections, options) {
   return formula;
 }
 
-function srtr(transAst, paramMap, traces, corrections, options) {
+function createSRTRSMT2(transAst, paramMap, traces, corrections, options) {
   var formula = correctAll(transAst, paramMap, traces, corrections, options);
   var weights = corrections.map(function (c, i) {return `w${i}`;});
   var deltas = Object.keys(paramMap)
@@ -248,12 +248,18 @@ function srtr(transAst, paramMap, traces, corrections, options) {
   return `${declarations}\n${objectives}`;
 }
 
+function srtr() {
+
+}
+
 module.exports = {
+  astMap: utils.astMap,
+  astReduce: utils.astReduce,
   astToJS: astToJS,
   subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,
   pEval: pEval,
   correctOne: correctOne,
   correctAll: correctAll,
-  srtr: srtr,
+  createSRTRSMT2: createSRTRSMT2,
 }
