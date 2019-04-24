@@ -15,7 +15,7 @@ if (state == 'A' && b.value > paramA) {
 }
 `);
 
-const parameterMap = {
+const paramMap = {
   paramA: 2,
 };
 
@@ -50,35 +50,27 @@ const corrections = [
 const options = {H: 1};
 
 const z3Input = createSRTRSMT2(
-    transAst, parameterMap, traces, corrections, options
-  ) + '\n(check-sat) (get-model)';
-
-
-
+    transAst, paramMap, traces, corrections, options
+  );
 
 const p = spawn('z3', ['-T:5', '-smt2', '-in'], {stdio: ['pipe', 'pipe', 'ignore']});
 p.stdin.write(z3Input);
 p.stdin.end();
 p.stdout.on('data', (data) => {
-  // console.log(typeof data.toString())
+  console.log(data.toString());
   if (!data.toString().startsWith("sat")) {
-    console.log(data.toString());
-    console.log(sexpParser.parse(data.toString()));
-
     const modelAst = sexpParser.parse(data.toString());
-
-    const deltas = modelAst.value.splice(1).reduce((acc, v) => {
-      console.log(v);
+    const results = modelAst.value.splice(1).reduce((acc, v) => {
       if (
         v.type === 'Expression'
-        && v.value[1].type === 'Identifier'
-        && (/w[0-9]+/.test(v.value[1].name) || /^delta_./.test(v.value[1].name))
-        && v.value[4].type === 'Literal'
+        && v.value[1].type === 'Atom' && v.value[1].value.type === 'Identifier'
+        && (/w[0-9]+/.test(v.value[1].value.name) || /^delta_./.test(v.value[1].value.name))
+        && v.value[4].type === 'Atom' && v.value[4].value.type === 'Literal'
       ) {
-        acc[v.value[1].name] = v.value[4].value;
+        acc[v.value[1].value.name] = v.value[4].value.value;
       }
       return acc;
     }, {});
-    console.log('deltas', deltas);
+    console.log('results', results);
   }
 });

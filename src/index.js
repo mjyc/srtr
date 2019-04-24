@@ -246,11 +246,10 @@ function createSRTRSMT2(transAst, paramMap, traces, corrections, options) {
   );
   var objectives = `(assert ${formula})
 (minimize (+ ${weights.join(' ')} ${deltas.map(function(d) {return `(absolute ${d})`}).join(' ')}))`
-  return `${declarations}\n${objectives}`;
-}
-
-function srtr() {
-
+  return `${declarations}\n${objectives}
+(check-sat)
+(get-model)
+`;
 }
 
 module.exports = {

@@ -149,8 +149,7 @@ function peg$parse(input, options) {
             return { type: "Expression", value: expr };
           },
       peg$c5 = function(atom) {
-            // return { type: "Atom", value: atom };
-            return atom;
+            return { type: "Atom", value: atom };
           },
       peg$c6 = peg$anyExpectation(),
       peg$c7 = peg$otherExpectation("whitespace"),
