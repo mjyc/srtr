@@ -53,18 +53,8 @@ const z3Input = createSRTRSMT2(
     transAst, parameterMap, traces, corrections, options
   ) + '\n(check-sat) (get-model)';
 
-// console.log(z3Input);
 
-// const z3Input = `
-// (declare-datatypes (T1 T2) ((B (mk-input (type T1) (value T2)))))
-// ${interpret(parser.parse(JS_CODE).body[0], typeDefs)}
 
-// (declare-const x String)
-// (declare-const y (B String Int))
-// (assert (= (f x y) "branch2"))
-// (check-sat)
-// (get-model)
-// `;
 
 const p = spawn('z3', ['-T:5', '-smt2', '-in'], {stdio: ['pipe', 'pipe', 'ignore']});
 p.stdin.write(z3Input);
@@ -74,5 +64,21 @@ p.stdout.on('data', (data) => {
   if (!data.toString().startsWith("sat")) {
     console.log(data.toString());
     console.log(sexpParser.parse(data.toString()));
+
+    const modelAst = sexpParser.parse(data.toString());
+
+    const deltas = modelAst.value.splice(1).reduce((acc, v) => {
+      console.log(v);
+      if (
+        v.type === 'Expression'
+        && v.value[1].type === 'Identifier'
+        && (/w[0-9]+/.test(v.value[1].name) || /^delta_./.test(v.value[1].name))
+        && v.value[4].type === 'Literal'
+      ) {
+        acc[v.value[1].name] = v.value[4].value;
+      }
+      return acc;
+    }, {});
+    console.log('deltas', deltas);
   }
 });

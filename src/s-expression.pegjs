@@ -5,7 +5,8 @@ Expression
 
 Atom
   = atom:(StringLiteral / NumericLiteral / Identifier) __ {
-      return { type: "Atom", value: atom };
+      // return { type: "Atom", value: atom };
+      return atom;
     }
 
 
