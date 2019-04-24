@@ -1,6 +1,9 @@
 const spawn = require('child_process').spawn;
 const {interpret, parser} = require('js2smt2');
-const {createSRTRSMT2} = require('../../');
+const {
+  createSRTRSMT2,
+  sparser,
+} = require('../../');
 
 const transAst = parser.parse(`
 if (state == 'A' && b.value > paramA) {
@@ -67,5 +70,9 @@ const p = spawn('z3', ['-T:5', '-smt2', '-in'], {stdio: ['pipe', 'pipe', 'ignore
 p.stdin.write(z3Input);
 p.stdin.end();
 p.stdout.on('data', (data) => {
-  console.log(data.toString());
+  // console.log(typeof data.toString())
+  if (!data.toString().startsWith("sat")) {
+    console.log(data.toString());
+    console.log(sparser.parse(data.toString()));
+  }
 });

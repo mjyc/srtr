@@ -1,6 +1,7 @@
 "use strict";
 var js2smt2 = require('js2smt2');
 var utils = require('../src/utils');
+var parser = require('./s-expression-parser.js');
 
 function subsituteVariables(ast, variableMap) {
   function subsitute(ast, varMap) {
@@ -255,6 +256,7 @@ function srtr() {
 module.exports = {
   astMap: utils.astMap,
   astReduce: utils.astReduce,
+  sparser: parser,
   astToJS: astToJS,
   subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,

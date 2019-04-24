@@ -206,7 +206,7 @@ if (state == 'A' && b.value > paramA) {
         b: {value: -1},
       }
     }
-  ]
+  ];
   const corrections = [
     {
       timestamp: 0,
