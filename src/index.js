@@ -75,29 +75,6 @@ function astToJS(ast) {
   }
 }
 
-function hasIdentifier(tree) {
-  return utils.astReduce(tree, function (acc, leaf) {
-    return acc || leaf.type === 'Identifier';
-  }, function (acc, node) {
-    var updated = Object.keys(node).reduce(function (prev, k) {
-      if (k === 'body') {
-        return prev || node[k].reduce(function(p, b) {return p;} || b, false);
-      } else if (
-        k === 'right' || k === 'left'
-        || k === 'object' || k === 'property'
-        || k === 'expression'
-        || k === 'argument'
-        || k === 'test' || k === 'consequent' || k === 'alternate'
-      ) {
-        return prev || node[k];
-      } else {
-        return prev;
-      }
-    }, false);
-    return acc || updated;
-  }, false);
-}
-
 function pEval(ast, variableMap) {
   var subbedAst = subsituteVariables(ast, variableMap);
   return utils.astMap(subbedAst, function (leaf) {
@@ -163,53 +140,60 @@ function pEval(ast, variableMap) {
 }
 
 function extractVariables(ast) {
-  function extract(ast, vars) {
-    if (ast.type === 'Identifier') {
-      return vars.slice(0).concat(ast.name);
-    } else if (ast.type === 'MemberExpression') {
-      var objVars = extractVariables(ast.object, vars);
-      var propVars = !ast.property.computed
-        ? [] : extractVariables(ast.property, vars);
-      return objVars.concat(propVars);
-    }
-
-    return Object.keys(ast).reduce(function(prev, k) {
-      if (Array.isArray(ast[k])) {
-        return prev.concat(
-          ast[k]
-            .map(function(elem) {return extract(elem, vars);})
-            .reduce(function (prev, arr) { return prev.concat(arr); }, vars)
-        );
-      } else if (typeof ast[k] === 'object' && ast[k] !== null) {
-        return prev.concat(extract(ast[k], vars));
+  var vars = utils.astReduce(ast, function (acc, leaf) {
+    return leaf.type === 'Identifier' ? acc.concat(leaf.name) : acc;
+  }, function (acc, node) {
+    var updated = Object.keys(node).reduce(function (prev, k) {
+      if (k === 'body') {
+        return node[k].reduce(function(p, b) {return p.concat(b);}, prev);
+      } else if (
+        k === 'right' || k === 'left'
+        || k === 'object' || k === 'property'
+        || k === 'expression'
+        || k === 'argument'
+        || k === 'test' || k === 'consequent' || k === 'alternate'
+      ) {
+        return node[k].reduce(function(p, b) {return p.concat(b);}, prev);
       } else {
         return prev;
       }
-    }, []);
-  }
-
-  var vars = extract(ast, []);
+    }, acc);
+    return updated;
+  }, []);
   return vars.filter(function(v, i){ return vars.indexOf(v) >= i; });
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
   var residualAst = pEval(transAst, trace);
   var params = extractVariables(residualAst);
+  console.log(params);
+  console.log(JSON.stringify(residualAst, null, 2));
   var paramReplacedAst = utils.astMap(residualAst, function (leaf) {
-    return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
+    // console.log(leaf)
+    // return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
+    //   type: 'BinaryExpression',
+    //   operator: '+',
+    //   left: leaf,
+    //   right: {
+    //      type: 'Identifier',
+    //      name: `delta_${leaf.name}`,
+    //   },
+    // } : leaf;
+    return leaf;
+  }, function (node) {
+    return (
+      node.type === 'MemberExpression'
+      && node.object.type === 'Identifier'
+      && node.object.name === 'params'
+    ) ? {
       type: 'BinaryExpression',
       operator: '+',
-      left: {
-         type: 'Identifier',
-         name: leaf.name,
-      },
+      left: node,
       right: {
          type: 'Identifier',
-         name: `delta_${leaf.name}`,
+         name: `delta_${node.property.value}`,
       },
-    } : leaf;
-  }, function (node) {
-    return node;
+    } : node;
   });
   var subbedAst = subsituteVariables(paramReplacedAst, paramMap);
   var c = typeof correction === 'string'
