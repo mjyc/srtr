@@ -13,14 +13,14 @@ const transAst = parser.parse(`
 if (
   state === "S1" &&
   inputD["type"] === "Features" &&
-  inputC["face"]["faceCenterX"] > params["engagedMinX"]
+  inputC["face"]["faceCenterX"] > engagedMinX
 ) {
   return "S2";
 } else {
   if (
     state === "S2" &&
     inputD["type"] === "Features" &&
-    inputC["face"]["faceCenterX"] < params["engagedMinX"]
+    inputC["face"]["faceCenterX"] < engagedMinX
   ) {
     return "S1";
   } else {

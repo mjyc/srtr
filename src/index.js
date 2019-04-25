@@ -166,34 +166,18 @@ function extractVariables(ast) {
 function correctOne(transAst, paramMap, trace, correction) {
   var residualAst = pEval(transAst, trace);
   var params = extractVariables(residualAst);
-  console.log(params);
-  console.log(JSON.stringify(residualAst, null, 2));
   var paramReplacedAst = utils.astMap(residualAst, function (leaf) {
-    // console.log(leaf)
-    // return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
-    //   type: 'BinaryExpression',
-    //   operator: '+',
-    //   left: leaf,
-    //   right: {
-    //      type: 'Identifier',
-    //      name: `delta_${leaf.name}`,
-    //   },
-    // } : leaf;
-    return leaf;
-  }, function (node) {
-    return (
-      node.type === 'MemberExpression'
-      && node.object.type === 'Identifier'
-      && node.object.name === 'params'
-    ) ? {
+    return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
       type: 'BinaryExpression',
       operator: '+',
-      left: node,
+      left: leaf,
       right: {
          type: 'Identifier',
-         name: `delta_${node.property.value}`,
+         name: `delta_${leaf.name}`,
       },
-    } : node;
+    } : leaf;
+  }, function (node) {
+    return node;
   });
   var subbedAst = subsituteVariables(paramReplacedAst, paramMap);
   var c = typeof correction === 'string'
