@@ -193,14 +193,14 @@ if (state == 'A' && b.value > paramA) {
   };
   const traces = [
     {
-      timestamp: 0,
+      stamp: 0,
       trace: {
         state: 'A',
         b: {value: 1},
       }
     },
     {
-      timestamp: 1,
+      stamp: 1,
       trace: {
         state: 'B',
         b: {value: -1},
@@ -209,12 +209,12 @@ if (state == 'A' && b.value > paramA) {
   ];
   const corrections = [
     {
-      timestamp: 0,
-      correction: 'B'
+      stamp: 0,
+      state: 'B'
     },
     {
-      timestamp: 1,
-      correction: 'A'
+      stamp: 1,
+      state: 'A'
     }
   ];
   const options = {H: 1};
@@ -226,7 +226,10 @@ if (state == 'A' && b.value > paramA) {
 (declare-const w1 Real)
 (declare-const delta_paramA Real)
 (assert (and (and true (xor (= w0 1) (and (= w0 0) (= "B" (ite (> 1 (+ 2 delta_paramA)) "B" "A"))))) (xor (= w1 1) (and (= w1 0) (= "A" (ite (<= -1 (+ 2 delta_paramA)) "A" "B"))))))
-(minimize (+ w0 w1 (absolute delta_paramA)))`);
+(minimize (+ w0 w1 (absolute delta_paramA)))
+(check-sat)
+(get-model)
+`);
 });
 
 
@@ -243,56 +246,56 @@ if (state == 'A' && input > paramA) {
   };
   const traces = [
     {
-      timestamp: 0,
+      stamp: 0,
       trace: {
         state: 'A',
         input: 1,
       }
     },
     {
-      timestamp: 1,
+      stamp: 1,
       trace: {
         state: 'A',
         input: 1.5,
       }
     },
     {
-      timestamp: 2,
+      stamp: 2,
       trace: {
         state: 'A',
         input: 0.5,
       }
     },
     {
-      timestamp: 3,
+      stamp: 3,
       trace: {
         state: 'A',
         input: -1,
       }
     },
     {
-      timestamp: 4,
+      stamp: 4,
       trace: {
         state: 'A',
         input: -1,
       }
     },
     {
-      timestamp: 5,
+      stamp: 5,
       trace: {
         state: 'A',
         input: -1.5,
       }
     },
     {
-      timestamp: 6,
+      stamp: 6,
       trace: {
         state: 'A',
         input: -0.5,
       }
     },
     {
-      timestamp: 7,
+      stamp: 7,
       trace: {
         state: 'A',
         input: 1,
@@ -301,36 +304,36 @@ if (state == 'A' && input > paramA) {
   ]
   const corrections = [
     {
-      timestamp: 0,
-      correction: 'B'
+      stamp: 0,
+      state: 'B'
     },
     {
-      timestamp: 1,
-      correction: 'B'
+      stamp: 1,
+      state: 'B'
     },
     {
-      timestamp: 2,
-      correction: 'B'
+      stamp: 2,
+      state: 'B'
     },
     {
-      timestamp: 3,
-      correction: 'B'
+      stamp: 3,
+      state: 'B'
     },
     {
-      timestamp: 4,
-      correction: 'A'
+      stamp: 4,
+      state: 'A'
     },
     {
-      timestamp: 5,
-      correction: 'A'
+      stamp: 5,
+      state: 'A'
     },
     {
-      timestamp: 6,
-      correction: 'A'
+      stamp: 6,
+      state: 'A'
     },
     {
-      timestamp: 7,
-      correction: 'A'
+      stamp: 7,
+      state: 'A'
     }
   ];
   const options = {H: 1};
@@ -348,5 +351,8 @@ if (state == 'A' && input > paramA) {
 (declare-const w7 Real)
 (declare-const delta_paramA Real)
 (assert (and (and (and (and (and (and (and (and true (xor (= w0 1) (and (= w0 0) (= "B" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w1 1) (and (= w1 0) (= "B" (ite (> 1.5 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w2 1) (and (= w2 0) (= "B" (ite (> 0.5 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w3 1) (and (= w3 0) (= "B" (ite (> -1 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w4 1) (and (= w4 0) (= "A" (ite (> -1 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w5 1) (and (= w5 0) (= "A" (ite (> -1.5 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w6 1) (and (= w6 0) (= "A" (ite (> -0.5 (+ 0 delta_paramA)) "B" "A"))))) (xor (= w7 1) (and (= w7 0) (= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))))))
-(minimize (+ w0 w1 w2 w3 w4 w5 w6 w7 (absolute delta_paramA)))`);
+(minimize (+ w0 w1 w2 w3 w4 w5 w6 w7 (absolute delta_paramA)))
+(check-sat)
+(get-model)
+`);
 });

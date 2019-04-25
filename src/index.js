@@ -225,9 +225,9 @@ function correctAll(transAst, paramMap, traces, corrections, options) {
   var H = typeof options === 'undefined' ? 0 : options.H;
   var formula = corrections.reduce(function(acc, c, i) {
     var t = traces.filter(function(ti) {
-      return ti.timestamp === c.timestamp;
+      return ti.stamp === c.stamp;
     })[0];
-    var phi = correctOne(transAst, paramMap, t.trace, c.correction);
+    var phi = correctOne(transAst, paramMap, t.trace, c.state);
     return `(and ${acc} (xor (= w${i} ${H}) (and (= w${i} 0) ${phi})))`;
   }, `true`);
   return formula;
