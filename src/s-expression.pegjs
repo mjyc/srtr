@@ -1,6 +1,14 @@
 Expression
-  = __ "(" __ expr:(Atom / Expression)* ")" __ {
+  = __ "(" __ expr:(Atom / Expression / DivisionExpression)* ")" __ {
       return { type: "Expression", value: expr };
+    }
+
+DivisionExpression  // HACK!
+  = __ "(" __ "/" __ atoms:Atom* ")" __ {
+      return { type: "Atom", value: {
+        type: "Literal",
+        value: atoms[0].value.value / atoms[1].value.value,
+      } };
     }
 
 Atom
