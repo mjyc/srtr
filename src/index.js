@@ -165,13 +165,6 @@ function extractVariables(ast) {
 
 function correctOne(transAst, paramMap, trace, correction) {
   var residualAst = pEval(transAst, trace);
-  var residual = astToJS(subsituteVariables(residualAst, paramMap));
-  var evaled = new Function(residual)();
-  if (evaled === correction) {
-    console.warn('evaledOutput=' + evaled + ' and correction=' + correction
-      + ' are same; they should be different! residual=' + residual
-    );
-  }
   var params = extractVariables(residualAst);
   var paramReplacedAst = utils.astMap(residualAst, function (leaf) {
     return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
@@ -202,7 +195,12 @@ function correctAll(transAst, paramMap, traces, corrections, options) {
     var t = traces.filter(function(ti) {
       return ti.stamp === c.stamp;
     })[0];
-    var phi = correctOne(transAst, paramMap, t.trace, c.state);
+    if (t.trace.state === c.state) {
+      console.warn('correction.state=' + c.state + ' is same as trace.state' +
+          t.trace.state + ' at ' + t.stamp + '; they should be different');
+      if (!!options.skipConsistents) return acc;
+    }
+    var phi = correctOne(transAst, paramMap, t.trace, c.state, options);
     return `(and ${acc} (xor (= w${i} ${H}) (and (= w${i} 0) ${phi})))`;
   }, `true`);
   return formula;
