@@ -178,6 +178,32 @@ if (state == 'A' && b.value > paramA) {
   expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
 });
 
+test('correctOne - nested', () => {
+  const transAst = parser.parse(`
+if (state == 'A') {
+  if (input > paramA) {
+    return 'B';
+  } else {
+    return 'A';
+  }
+} else {
+  return 'C';
+}
+`);
+  const parameterMap = {
+    paramA: 0,
+  };
+  const trace = {
+    state: 'A',
+    input: 1,
+  }
+  const correction = 'A';
+
+  const formula = correctOne(transAst, parameterMap, trace, correction);
+  console.log(formula)
+  expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
+});
+
 test('createSRTRSMT2 - transition function', () => {
   const transAst = parser.parse(`
 if (state == 'A' && b.value > paramA) {

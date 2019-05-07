@@ -132,7 +132,9 @@ function pEval(ast, variableMap) {
       return (node.left.type === 'Literal' && !node.left.value)
         ? node.left : node.right;
     } else if (node.type === 'IfStatement') {
-      return (node.test.type !== 'Literal') ? node : node.alternate;
+      if (node.test.type !== 'Literal') return node;
+      var testEvaled = Function(`return ${astToJS(node.test)}`)();
+      return testEvaled ? node.consequent : node.alternate;
     } else {
       return node;
     }
@@ -164,10 +166,7 @@ function extractVariables(ast) {
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
-  console.log('trace', trace);
-  console.log('before', astToJS(transAst));
   var residualAst = pEval(transAst, trace);
-  console.log('after', astToJS(residualAst));
   var params = extractVariables(residualAst);
   var paramReplacedAst = utils.astMap(residualAst, function (leaf) {
     return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
