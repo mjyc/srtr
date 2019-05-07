@@ -164,7 +164,10 @@ function extractVariables(ast) {
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
+  console.log('trace', trace);
+  console.log('before', astToJS(transAst));
   var residualAst = pEval(transAst, trace);
+  console.log('after', astToJS(residualAst));
   var params = extractVariables(residualAst);
   var paramReplacedAst = utils.astMap(residualAst, function (leaf) {
     return (leaf.type === 'Identifier' && params.indexOf(leaf.name) !== -1) ? {
