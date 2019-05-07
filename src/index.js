@@ -130,7 +130,7 @@ function pEval(ast, variableMap) {
       )
     ) {
       return (node.left.type === 'Literal' && !node.left.value)
-        ? node.left : node.right;
+        ? node.right : node.left;
     } else if (node.type === 'IfStatement') {
       if (node.test.type !== 'Literal') return node;
       var testEvaled = Function(`return ${astToJS(node.test)}`)();
