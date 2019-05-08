@@ -7,7 +7,7 @@
     "build": "pegjs -o src/s-expression-parser.js src/s-expression.pegjs",
     "test": "jest"
   },
-  "repository": "https://github.com/mjyc/srtr.git",
+  "repository": "https://github.com/mjyc/srtr",
   "author": "Michael Jae-Yoon Chung",
   "license": "MIT",
   "dependencies": {
