@@ -1,4 +1,4 @@
-const {jsParser} = require('js2smt2');
+const { jsParser } = require("js2smt2");
 const {
   astToJS,
   subsituteVariables,
@@ -6,10 +6,10 @@ const {
   extractVariables,
   correctOne,
   correctAll,
-  createSRTRSMT2,
-} = require('../src/');
+  createSRTRSMT2
+} = require("../src/");
 
-test('astToJS', () => {
+test("astToJS", () => {
   const ast = jsParser.parse(`
 if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
   return {
@@ -38,31 +38,34 @@ if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
 }
 `);
 
-  expect(astToJS(ast))
-    .toBe(`if ((((a == "hello") && (b["type"] == "there")) && ((b["value"] * 1) === 0))) { return {"state": "branch1", "outputs": {"action1": "a1", "action2": 100}}; } else { if ((((a == "jello") && (b["type"] == "whirl")) && ((b["value"] + 1) === 2))) { return {"state": "branch2", "outputs": {"action1": "a2", "action2": 200}}; } else { return {"state": "branch3", "outputs": {"action1": "a3", "action2": 300}}; } }`);
+  expect(astToJS(ast)).toBe(
+    `if ((((a == "hello") && (b["type"] == "there")) && ((b["value"] * 1) === 0))) { return {"state": "branch1", "outputs": {"action1": "a1", "action2": 100}}; } else { if ((((a == "jello") && (b["type"] == "whirl")) && ((b["value"] + 1) === 2))) { return {"state": "branch2", "outputs": {"action1": "a2", "action2": 200}}; } else { return {"state": "branch3", "outputs": {"action1": "a3", "action2": 300}}; } }`
+  );
 });
 
-test('subsituteVariables', () => {
+test("subsituteVariables", () => {
   const ast = jsParser.parse(
-      `a == 'hello' && b.type == 'there' && b.value * 1 === 0`);
+    `a == 'hello' && b.type == 'there' && b.value * 1 === 0`
+  );
   const varMap = {
-    a: 'hello',
+    a: "hello",
     b: {
-      type: 'there',
-      value: 0,
+      type: "there",
+      value: 0
     }
   };
 
   const subbedAst = subsituteVariables(ast, varMap);
-  expect(astToJS(subbedAst))
-    .toBe(`((("hello" == "hello") && ("there" == "there")) && ((0 * 1) === 0))`);
+  expect(astToJS(subbedAst)).toBe(
+    `((("hello" == "hello") && ("there" == "there")) && ((0 * 1) === 0))`
+  );
 });
 
-test('subsituteVariables - MemberExpression', () => {
+test("subsituteVariables - MemberExpression", () => {
   const ast = jsParser.parse(`b["type"]`);
   const varMap = {
     b: {
-      type: 'there',
+      type: "there"
     }
   };
 
@@ -70,7 +73,7 @@ test('subsituteVariables - MemberExpression', () => {
   expect(astToJS(astSubed)).toBe(`"there"`);
 });
 
-test('pEval - transition function', () => {
+test("pEval - transition function", () => {
   const transAst = jsParser.parse(`
 if (state == 'A' && b.value > param) {
   return 'B';
@@ -79,16 +82,17 @@ if (state == 'A' && b.value > param) {
 }
 `);
   const varMap = {
-    state: 'A',
-    b: {value: 1},
-  }
+    state: "A",
+    b: { value: 1 }
+  };
 
   const evaledAst = pEval(transAst, varMap);
-  expect(astToJS(evaledAst))
-    .toBe(`if ((1 > param)) { return "B"; } else { return "A"; }`);
+  expect(astToJS(evaledAst)).toBe(
+    `if ((1 > param)) { return "B"; } else { return "A"; }`
+  );
 });
 
-test('pEval - return', () => {
+test("pEval - return", () => {
   const transAst = jsParser.parse(`
 if (state == 'A' && b.value > param) {
   return 'B';
@@ -97,15 +101,15 @@ if (state == 'A' && b.value > param) {
 }
 `);
   const varMap = {
-    state: 'B',
-    b: {value: 1},
-  }
+    state: "B",
+    b: { value: 1 }
+  };
 
   const evaledAst = pEval(transAst, varMap);
   expect(astToJS(evaledAst)).toBe(`return "B";`);
 });
 
-test('pEval - multiple branches', () => {
+test("pEval - multiple branches", () => {
   const transAst = jsParser.parse(`
 if (state == 'A' && b.value > param) {
   return 'B';
@@ -116,17 +120,17 @@ if (state == 'A' && b.value > param) {
 }
 `);
   const varMap = {
-    state: 'A',
-    b: {value: -1},
-  }
+    state: "A",
+    b: { value: -1 }
+  };
 
   const evaledAst = pEval(transAst, varMap);
-  expect(astToJS(evaledAst))
-    .toBe(`if ((-1 > param)) { return \"B\"; } else { return \"C\"; }`);
+  expect(astToJS(evaledAst)).toBe(
+    `if ((-1 > param)) { return \"B\"; } else { return \"C\"; }`
+  );
 });
 
-
-test('pEval - multiple branches with multiple from states', () => {
+test("pEval - multiple branches with multiple from states", () => {
   const transAst = jsParser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
@@ -137,24 +141,26 @@ if (state == 'A' && b.value > paramA) {
 }
 `);
   const varMap = {
-    state: 'B',
-    b: {value: 0},
-  }
+    state: "B",
+    b: { value: 0 }
+  };
 
   const evaledAst = pEval(transAst, varMap);
-  expect(astToJS(evaledAst))
-    .toEqual(`if ((0 > paramB)) { return "C"; } else { return "B"; }`);
+  expect(astToJS(evaledAst)).toEqual(
+    `if ((0 > paramB)) { return "C"; } else { return "B"; }`
+  );
 });
 
-test('extractVariables', () => {
+test("extractVariables", () => {
   const ast = jsParser.parse(
-      `a == 'hello' && b.type == 'there' && b.value * 1 === 0`);
+    `a == 'hello' && b.type == 'there' && b.value * 1 === 0`
+  );
   const variables = extractVariables(ast);
 
   expect(variables.sort()).toEqual(["a", "b", "type", "value"]);
 });
 
-test('correctOne', () => {
+test("correctOne", () => {
   const transAst = jsParser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
@@ -166,19 +172,19 @@ if (state == 'A' && b.value > paramA) {
 `);
   const parameterMap = {
     paramA: 0,
-    paramB: 1,
+    paramB: 1
   };
   const trace = {
-    state: 'A',
-    b: {value: 1},
-  }
-  const correction = 'A';
+    state: "A",
+    b: { value: 1 }
+  };
+  const correction = "A";
 
   const formula = correctOne(transAst, parameterMap, trace, correction);
   expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
 });
 
-test('correctOne - nested', () => {
+test("correctOne - nested", () => {
   const transAst = jsParser.parse(`
 if (state == 'A') {
   if (input > paramA) {
@@ -191,20 +197,20 @@ if (state == 'A') {
 }
 `);
   const parameterMap = {
-    paramA: 0,
+    paramA: 0
   };
   const trace = {
-    state: 'A',
-    input: 1,
-  }
-  const correction = 'A';
+    state: "A",
+    input: 1
+  };
+  const correction = "A";
 
   const formula = correctOne(transAst, parameterMap, trace, correction);
-  console.log(formula)
+  console.log(formula);
   expect(formula).toBe('(= "A" (ite (> 1 (+ 0 delta_paramA)) "B" "A"))');
 });
 
-test('createSRTRSMT2 - transition function', () => {
+test("createSRTRSMT2 - transition function", () => {
   const transAst = jsParser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
@@ -215,38 +221,43 @@ if (state == 'A' && b.value > paramA) {
 }
 `);
   const parameterMap = {
-    paramA: 2,
+    paramA: 2
   };
   const traces = [
     {
       stamp: 0,
       trace: {
-        state: 'A',
-        b: {value: 1},
+        state: "A",
+        b: { value: 1 }
       }
     },
     {
       stamp: 1,
       trace: {
-        state: 'B',
-        b: {value: -1},
+        state: "B",
+        b: { value: -1 }
       }
     }
   ];
   const corrections = [
     {
       stamp: 0,
-      state: 'B'
+      state: "B"
     },
     {
       stamp: 1,
-      state: 'A'
+      state: "A"
     }
   ];
-  const options = {H: 1};
+  const options = { H: 1 };
 
   const formula = createSRTRSMT2(
-      transAst, parameterMap, traces, corrections, options);
+    transAst,
+    parameterMap,
+    traces,
+    corrections,
+    options
+  );
   expect(formula).toBe(`(define-fun absolute ((x Real)) Real
   (ite (>= x 0) x (- x)))(declare-const w0 Real)
 (declare-const w1 Real)
@@ -258,8 +269,7 @@ if (state == 'A' && b.value > paramA) {
 `);
 });
 
-
-test('createSRTRSMT2 - unsat-able traces', () => {
+test("createSRTRSMT2 - unsat-able traces", () => {
   const transAst = jsParser.parse(`
 if (state == 'A' && input > paramA) {
   return 'B';
@@ -268,104 +278,109 @@ if (state == 'A' && input > paramA) {
 }
 `);
   const parameterMap = {
-    paramA: 0,
+    paramA: 0
   };
   const traces = [
     {
       stamp: 0,
       trace: {
-        state: 'A',
-        input: 1,
+        state: "A",
+        input: 1
       }
     },
     {
       stamp: 1,
       trace: {
-        state: 'A',
-        input: 1.5,
+        state: "A",
+        input: 1.5
       }
     },
     {
       stamp: 2,
       trace: {
-        state: 'A',
-        input: 0.5,
+        state: "A",
+        input: 0.5
       }
     },
     {
       stamp: 3,
       trace: {
-        state: 'A',
-        input: -1,
+        state: "A",
+        input: -1
       }
     },
     {
       stamp: 4,
       trace: {
-        state: 'A',
-        input: -1,
+        state: "A",
+        input: -1
       }
     },
     {
       stamp: 5,
       trace: {
-        state: 'A',
-        input: -1.5,
+        state: "A",
+        input: -1.5
       }
     },
     {
       stamp: 6,
       trace: {
-        state: 'A',
-        input: -0.5,
+        state: "A",
+        input: -0.5
       }
     },
     {
       stamp: 7,
       trace: {
-        state: 'A',
-        input: 1,
+        state: "A",
+        input: 1
       }
-    },
-  ]
+    }
+  ];
   const corrections = [
     {
       stamp: 0,
-      state: 'B'
+      state: "B"
     },
     {
       stamp: 1,
-      state: 'B'
+      state: "B"
     },
     {
       stamp: 2,
-      state: 'B'
+      state: "B"
     },
     {
       stamp: 3,
-      state: 'B'
+      state: "B"
     },
     {
       stamp: 4,
-      state: 'A'
+      state: "A"
     },
     {
       stamp: 5,
-      state: 'A'
+      state: "A"
     },
     {
       stamp: 6,
-      state: 'A'
+      state: "A"
     },
     {
       stamp: 7,
-      state: 'A'
+      state: "A"
     }
   ];
-  const options = {H: 1};
+  const options = { H: 1 };
 
   const formula = createSRTRSMT2(
-      transAst, parameterMap, traces, corrections, options);
+    transAst,
+    parameterMap,
+    traces,
+    corrections,
+    options
+  );
   expect(formula).toBe(`(define-fun absolute ((x Real)) Real
   (ite (>= x 0) x (- x)))(declare-const w0 Real)
 (declare-const w1 Real)
