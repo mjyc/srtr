@@ -1,11 +1,11 @@
 const spawn = require('child_process').spawn;
-const {interpret, parser} = require('js2smt2');
+const {interpret, jsParser} = require('js2smt2');
 const {
   createSRTRSMT2,
   sexpParser,
 } = require('../../');
 
-const transAst = parser.parse(`
+const transAst = jsParser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
 } else if (state == 'B' && b.value <= paramA) {

@@ -1,4 +1,4 @@
-const {parser} = require('js2smt2');
+const {jsParser} = require('js2smt2');
 const {
   astToJS,
   subsituteVariables,
@@ -10,7 +10,7 @@ const {
 } = require('../src/');
 
 test('astToJS', () => {
-  const ast = parser.parse(`
+  const ast = jsParser.parse(`
 if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
   return {
     state: 'branch1',
@@ -43,7 +43,7 @@ if (a == 'hello' && b.type == 'there' && b.value * 1 === 0) {
 });
 
 test('subsituteVariables', () => {
-  const ast = parser.parse(
+  const ast = jsParser.parse(
       `a == 'hello' && b.type == 'there' && b.value * 1 === 0`);
   const varMap = {
     a: 'hello',
@@ -59,7 +59,7 @@ test('subsituteVariables', () => {
 });
 
 test('subsituteVariables - MemberExpression', () => {
-  const ast = parser.parse(`b["type"]`);
+  const ast = jsParser.parse(`b["type"]`);
   const varMap = {
     b: {
       type: 'there',
@@ -71,7 +71,7 @@ test('subsituteVariables - MemberExpression', () => {
 });
 
 test('pEval - transition function', () => {
-  const transAst = parser.parse(`
+  const transAst = jsParser.parse(`
 if (state == 'A' && b.value > param) {
   return 'B';
 } else {
@@ -89,7 +89,7 @@ if (state == 'A' && b.value > param) {
 });
 
 test('pEval - return', () => {
-  const transAst = parser.parse(`
+  const transAst = jsParser.parse(`
 if (state == 'A' && b.value > param) {
   return 'B';
 } else {
@@ -106,7 +106,7 @@ if (state == 'A' && b.value > param) {
 });
 
 test('pEval - multiple branches', () => {
-  const transAst = parser.parse(`
+  const transAst = jsParser.parse(`
 if (state == 'A' && b.value > param) {
   return 'B';
 } else if (state == 'A' && b.value < 0) {
@@ -122,12 +122,12 @@ if (state == 'A' && b.value > param) {
 
   const evaledAst = pEval(transAst, varMap);
   expect(astToJS(evaledAst))
-    .toBe(`if ((-1 > param)) { return \"B\"; } else { return \"A\"; }`);
+    .toBe(`if ((-1 > param)) { return \"B\"; } else { return \"C\"; }`);
 });
 
 
 test('pEval - multiple branches with multiple from states', () => {
-  const transAst = parser.parse(`
+  const transAst = jsParser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
 } else if (state == 'B' && b.value > paramB) {
@@ -147,15 +147,15 @@ if (state == 'A' && b.value > paramA) {
 });
 
 test('extractVariables', () => {
-  const ast = parser.parse(
+  const ast = jsParser.parse(
       `a == 'hello' && b.type == 'there' && b.value * 1 === 0`);
   const variables = extractVariables(ast);
 
-  expect(variables.sort()).toEqual(["a", "b"]);
+  expect(variables.sort()).toEqual(["a", "b", "type", "value"]);
 });
 
 test('correctOne', () => {
-  const transAst = parser.parse(`
+  const transAst = jsParser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
 } else if (state == 'B' && b.value > paramB) {
@@ -179,7 +179,7 @@ if (state == 'A' && b.value > paramA) {
 });
 
 test('correctOne - nested', () => {
-  const transAst = parser.parse(`
+  const transAst = jsParser.parse(`
 if (state == 'A') {
   if (input > paramA) {
     return 'B';
@@ -205,7 +205,7 @@ if (state == 'A') {
 });
 
 test('createSRTRSMT2 - transition function', () => {
-  const transAst = parser.parse(`
+  const transAst = jsParser.parse(`
 if (state == 'A' && b.value > paramA) {
   return 'B';
 } else if (state == 'B' && b.value <= paramA) {
@@ -260,7 +260,7 @@ if (state == 'A' && b.value > paramA) {
 
 
 test('createSRTRSMT2 - unsat-able traces', () => {
-  const transAst = parser.parse(`
+  const transAst = jsParser.parse(`
 if (state == 'A' && input > paramA) {
   return 'B';
 } else {

@@ -230,7 +230,7 @@ function createSRTRSMT2(transAst, paramMap, traces, corrections, options) {
 module.exports = {
   astMap: utils.astMap,
   astReduce: utils.astReduce,
-  sparser: parser,
+  jsParser: js2smt2.jsParser,
   astToJS: astToJS,
   subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,

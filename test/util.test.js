@@ -1,4 +1,4 @@
-const {parser} = require('js2smt2');
+const {jsParser} = require('js2smt2');
 const {
   astMap,
   astReduce,
@@ -14,7 +14,7 @@ test('astMap', () => {
     return node;
   });
 
-  expect(subsitute(parser.parse(`a === 'hello'`)))
+  expect(subsitute(jsParser.parse(`a === 'hello'`)))
     .toEqual({
        "type": "Program",
        "body": [
@@ -57,14 +57,14 @@ test('astReduce', () => {
     return acc || updated;
   }, false);
 
-  expect(hasIdentifier(parser.parse(`a == 'hello' && b == 'there'`)))
+  expect(hasIdentifier(jsParser.parse(`a == 'hello' && b == 'there'`)))
     .toBe(true);
-  expect(hasIdentifier(parser.parse(`'hello' !== 'there'`)))
+  expect(hasIdentifier(jsParser.parse(`'hello' !== 'there'`)))
     .toBe(false);
-  expect(hasIdentifier(parser.parse(`o["m"]`)))
+  expect(hasIdentifier(jsParser.parse(`o["m"]`)))
     .toBe(true);
-  expect(hasIdentifier(parser.parse(`o[m]`)))
+  expect(hasIdentifier(jsParser.parse(`o[m]`)))
     .toBe(true);
-  expect(hasIdentifier(parser.parse(`o.m`)))
+  expect(hasIdentifier(jsParser.parse(`o.m`)))
     .toBe(true);
 });
