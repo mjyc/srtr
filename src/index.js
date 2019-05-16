@@ -1,5 +1,5 @@
 "use strict";
-var js2smt2 = require("js2smt2");
+var js2smt2 = require("z3js");
 var utils = require("../src/utils");
 var parser = require("./s-expression-parser.js");
 
