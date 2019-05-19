@@ -1,5 +1,5 @@
 "use strict";
-var js2smt2 = require("z3js");
+var z3js = require("z3js");
 var utils = require("../src/utils");
 var parser = require("./s-expression-parser.js");
 
@@ -228,7 +228,7 @@ function correctOne(transAst, paramMap, trace, correction) {
   var subbedAst = subsituteVariables(paramReplacedAst, paramMap);
   var c =
     typeof correction === "string" ? JSON.stringify(correction) : correction;
-  var formula = `(= ${c} ${js2smt2.toSMT2(subbedAst)})`;
+  var formula = `(= ${c} ${z3js.toSMT2(subbedAst)})`;
   return formula;
 }
 
@@ -291,7 +291,7 @@ function createSRTRSMT2(transAst, paramMap, traces, corrections, options) {
 module.exports = {
   astMap: utils.astMap,
   astReduce: utils.astReduce,
-  jsParser: js2smt2.jsParser,
+  jsParser: z3js.jsParser,
   astToJS: astToJS,
   subsituteVariables: subsituteVariables,
   extractVariables: extractVariables,

@@ -11,7 +11,7 @@
   "author": "Michael Jae-Yoon Chung",
   "license": "MIT",
   "dependencies": {
-    "z3js": "file:../js2smt2"
+    "z3js": "file:../z3js"
   },
   "devDependencies": {
     "jest": "^24.7.1",

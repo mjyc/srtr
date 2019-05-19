@@ -1,5 +1,5 @@
 const spawn = require("child_process").spawn;
-const { interpret, jsParser } = require("js2smt2");
+const { interpret, jsParser } = require("z3js");
 const { createSRTRSMT2, sexpParser } = require("../../");
 
 const transAst = jsParser.parse(`

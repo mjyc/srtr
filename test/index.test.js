@@ -1,4 +1,4 @@
-const { jsParser } = require("js2smt2");
+const { jsParser } = require("z3js");
 const {
   astToJS,
   subsituteVariables,
