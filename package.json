@@ -1,0 +1,18 @@
+{
+  "name": "srtr",
+  "version": "0.0.0",
+  "description": "An implementation of the SMT-based Robot Transition Repair algorithm",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": "https://github.com/mjyc/srtr.git",
+  "author": "Michael Jae-Yoon Chung",
+  "license": "MIT",
+  "dependencies": {
+    "js2smt2": "file:../js2smt2"
+  },
+  "devDependencies": {
+    "jest": "^24.7.1"
+  }
+}
