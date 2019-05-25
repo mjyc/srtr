@@ -1,13 +1,13 @@
 "use strict";
 
 function astMap(tree, leafFnc, nodeFnc) {
-  function map(ast) {
+  const map = ast => {
     if (ast.type === "Identifier" || ast.type === "Literal") {
       return leafFnc(ast);
     } else {
-      var newNode = Object.keys(ast).reduce(function(prev, k) {
+      const newNode = Object.keys(ast).reduce((prev, k) => {
         if (Array.isArray(ast[k])) {
-          prev[k] = ast[k].map(function(n) {
+          prev[k] = ast[k].map(n => {
             return map(n);
           });
         } else if (typeof ast[k] === "object" && ast[k] !== null) {
@@ -19,18 +19,18 @@ function astMap(tree, leafFnc, nodeFnc) {
       }, {});
       return nodeFnc(newNode);
     }
-  }
+  };
   return map(tree);
 }
 
 function astReduce(tree, leafFnc, nodeFnc, init) {
-  function reduce(acc, ast) {
+  const reduce = (acc, ast) => {
     if (ast.type === "Identifier" || ast.type === "Literal") {
       return leafFnc(acc, ast);
     } else {
-      var newNode = Object.keys(ast).reduce(function(prev, k) {
+      const newNode = Object.keys(ast).reduce((prev, k) => {
         if (Array.isArray(ast[k])) {
-          prev[k] = ast[k].map(function(n) {
+          prev[k] = ast[k].map(n => {
             return reduce(acc, n);
           });
         } else if (typeof ast[k] === "object" && ast[k] !== null) {
@@ -42,7 +42,7 @@ function astReduce(tree, leafFnc, nodeFnc, init) {
       }, {});
       return nodeFnc(acc, newNode);
     }
-  }
+  };
   return reduce(init, tree);
 }
 
