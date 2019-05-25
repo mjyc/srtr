@@ -1,12 +1,12 @@
 "use strict";
-var z3js = require("z3js");
-var utils = require("../src/utils");
-var parser = require("./s-expression-parser.js");
+const z3js = require("z3js");
+const utils = require("../src/utils");
+const parser = require("./s-expression-parser.js");
 
 function subsituteVariables(ast, variableMap) {
-  function subsitute(ast, varMap) {
+  const subsitute = (ast, varMap) => {
     if (ast.type === "Identifier") {
-      var value = varMap[ast.name];
+      const value = varMap[ast.name];
       return typeof value === "undefined"
         ? ast
         : {
@@ -14,8 +14,8 @@ function subsituteVariables(ast, variableMap) {
             value: value
           };
     } else if (ast.type === "MemberExpression") {
-      var object = subsitute(ast.object, varMap);
-      var property = !ast.property.computed
+      const object = subsitute(ast.object, varMap);
+      const property = !ast.property.computed
         ? ast.property
         : subsitute(ast.property, varMap);
       return typeof object.value === "object" && object.value !== null
@@ -31,9 +31,9 @@ function subsituteVariables(ast, variableMap) {
         : ast;
     }
 
-    return Object.keys(ast).reduce(function(prev, k) {
+    return Object.keys(ast).reduce((prev, k) => {
       if (Array.isArray(ast[k])) {
-        prev[k] = ast[k].map(function(elem) {
+        prev[k] = ast[k].map((elem) => {
           return subsitute(elem, varMap);
         });
       } else if (typeof ast[k] === "object" && ast[k] !== null) {
@@ -97,7 +97,7 @@ function astToJS(ast) {
 }
 
 function pEval(ast, variableMap) {
-  var subbedAst = subsituteVariables(ast, variableMap);
+  const subbedAst = subsituteVariables(ast, variableMap);
   return utils.astMap(
     subbedAst,
     function(leaf) {
@@ -155,7 +155,7 @@ function pEval(ast, variableMap) {
           : node.left;
       } else if (node.type === "IfStatement") {
         if (node.test.type !== "Literal") return node;
-        var testEvaled = Function(`return ${astToJS(node.test)}`)();
+        const testEvaled = Function(`return ${astToJS(node.test)}`)();
         return testEvaled ? node.consequent : node.alternate;
       } else {
         return node;
@@ -165,13 +165,13 @@ function pEval(ast, variableMap) {
 }
 
 function extractVariables(ast) {
-  var vars = utils.astReduce(
+  const vars = utils.astReduce(
     ast,
     function(acc, leaf) {
       return leaf.type === "Identifier" ? acc.concat(leaf.name) : acc;
     },
     function(acc, node) {
-      var updated = Object.keys(node).reduce(function(prev, k) {
+      const updated = Object.keys(node).reduce(function(prev, k) {
         if (k === "body") {
           return node[k].reduce(function(p, b) {
             return p.concat(b);
@@ -204,9 +204,9 @@ function extractVariables(ast) {
 }
 
 function correctOne(transAst, paramMap, trace, correction) {
-  var residualAst = pEval(transAst, trace);
-  var params = extractVariables(residualAst);
-  var paramReplacedAst = utils.astMap(
+  const residualAst = pEval(transAst, trace);
+  const params = extractVariables(residualAst);
+  const paramReplacedAst = utils.astMap(
     residualAst,
     function(leaf) {
       return leaf.type === "Identifier" && params.indexOf(leaf.name) !== -1
@@ -225,10 +225,10 @@ function correctOne(transAst, paramMap, trace, correction) {
       return node;
     }
   );
-  var subbedAst = subsituteVariables(paramReplacedAst, paramMap);
-  var c =
+  const subbedAst = subsituteVariables(paramReplacedAst, paramMap);
+  const c =
     typeof correction === "string" ? JSON.stringify(correction) : correction;
-  var formula = `(= ${c} ${z3js.toSMT2(subbedAst)})`;
+  const formula = `(= ${c} ${z3js.toSMT2(subbedAst)})`;
   return formula;
 }
 
@@ -236,9 +236,9 @@ function correctAll(transAst, paramMap, traces, corrections, options) {
   if (typeof options === "undefined") {
     options = {};
   }
-  var H = typeof options === "undefined" ? 0 : options.H;
-  var formula = corrections.reduce(function(acc, c, i) {
-    var t = traces.filter(function(ti) {
+  const H = typeof options === "undefined" ? 0 : options.H;
+  const formula = corrections.reduce(function(acc, c, i) {
+    const t = traces.filter(function(ti) {
       return ti.stamp === c.stamp;
     })[0];
     if (t.trace.state === c.state) {
@@ -253,21 +253,21 @@ function correctAll(transAst, paramMap, traces, corrections, options) {
       );
       if (!!options.skipConsistents) return acc;
     }
-    var phi = correctOne(transAst, paramMap, t.trace, c.state, options);
+    const phi = correctOne(transAst, paramMap, t.trace, c.state, options);
     return `(and ${acc} (xor (= w${i} ${H}) (and (= w${i} 0) ${phi})))`;
   }, `true`);
   return formula;
 }
 
 function createSRTRSMT2(transAst, paramMap, traces, corrections, options) {
-  var formula = correctAll(transAst, paramMap, traces, corrections, options);
-  var weights = corrections.map(function(c, i) {
+  const formula = correctAll(transAst, paramMap, traces, corrections, options);
+  const weights = corrections.map(function(c, i) {
     return `w${i}`;
   });
-  var deltas = Object.keys(paramMap).map(function(name) {
+  const deltas = Object.keys(paramMap).map(function(name) {
     return `delta_${name}`;
   });
-  var declarations = `(define-fun absolute ((x Real)) Real
+  const declarations = `(define-fun absolute ((x Real)) Real
   (ite (>= x 0) x (- x)))`.concat(
     weights
       .concat(deltas)
@@ -276,7 +276,7 @@ function createSRTRSMT2(transAst, paramMap, traces, corrections, options) {
       })
       .join("\n")
   );
-  var objectives = `(assert ${formula})
+  const objectives = `(assert ${formula})
 (minimize (+ ${weights.join(" ")} ${deltas
     .map(function(d) {
       return `(absolute ${d})`;
