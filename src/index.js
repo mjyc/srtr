@@ -33,7 +33,7 @@ function subsituteVariables(ast, variableMap) {
 
     return Object.keys(ast).reduce((prev, k) => {
       if (Array.isArray(ast[k])) {
-        prev[k] = ast[k].map((elem) => {
+        prev[k] = ast[k].map(elem => {
           return subsitute(elem, varMap);
         });
       } else if (typeof ast[k] === "object" && ast[k] !== null) {
@@ -43,7 +43,7 @@ function subsituteVariables(ast, variableMap) {
       }
       return prev;
     }, {});
-  }
+  };
 
   return subsitute(ast, variableMap);
 }
