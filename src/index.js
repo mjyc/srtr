@@ -1,7 +1,6 @@
 "use strict";
 const z3js = require("z3js");
 const utils = require("../src/utils");
-const parser = require("./s-expression-parser.js");
 
 function subsituteVariables(ast, variableMap) {
   const subsitute = (ast, varMap) => {
@@ -298,6 +297,5 @@ module.exports = {
   pEval: pEval,
   correctOne: correctOne,
   correctAll: correctAll,
-  createSRTRSMT2: createSRTRSMT2,
-  sexpParser: parser
+  createSRTRSMT2: createSRTRSMT2
 };
